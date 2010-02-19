@@ -1,0 +1,38 @@
+{ "participants" : [
+	{ 	"id" : "josefalcon",
+		"inboxip" : "192.168.2.1",
+		"inboxport" : 8080,
+		"heartbeatip" : "192.168.2.1",
+		"hearbeatport" : 8081,
+		"priority" : 100,
+		"defaultvote" : "YES",
+		"pathtologfile" : "/logfile.txt"
+	},
+	{ 	"id" : "chris",
+		"inboxip" : "192.168.2.1",
+		"inboxport" : 8080,
+		"heartbeatip" : "192.168.2.1",
+		"hearbeatport" : 8081,
+		"priority" : 100,
+		"defaultvote" : "YES"
+	
+	},
+	{ 	"id" : "john", 
+		"inboxip" : "192.168.2.1",
+		"inboxport" : 8080,
+		"heartbeatip" : "192.168.2.1",
+		"hearbeatport" : 8081,
+		"priority" : 100,
+		"defaultvote" : "YES"
+	
+	},
+	{ 	"id" : "jack",
+		"inboxip" : "192.168.2.1",
+		"inboxport" : 8080,
+		"heartbeatip" : "192.168.2.1",
+		"hearbeatport" : 8081,
+		"priority" : 100,
+		"defaultvote" : "YES"
+	
+	}]
+}
