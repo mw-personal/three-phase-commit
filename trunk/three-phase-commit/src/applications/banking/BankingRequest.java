@@ -13,9 +13,9 @@ public class BankingRequest implements Request {
 		DEPOSIT
 	}
 
-	private final BankingRequestType type;
-	private final String accountName;
-	private final double amount;
+	private BankingRequestType type;
+	private String accountName;
+	private double amount;
 	
 	public BankingRequest(BankingRequestType type, String accountName, double amount) {
 		this.type = type;

@@ -16,11 +16,11 @@ public class Message implements Serializable {
 		ABORT,
 		INITIATE }
 	
-	private final MessageType type;
-	private final String source;
-	private final String dest;
-	private final long timestamp;
-	private final Request request;
+	private MessageType type;
+	private String source;
+	private String dest;
+	private long timestamp;
+	private Request request;
 	//private Class<? extends Request> requestType;
 	
 	public Message(MessageType type, String source, String dest, long timestamp, Request r){
