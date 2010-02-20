@@ -5,25 +5,25 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class TransactionLog implements Logger {
+public class TransactionLogger implements Logger {
 
 	private File file;
 	private String filePath;
 	private FileWriter writer;
 	
-	public TransactionLog(String filePath) throws FileNotFoundException, IOException {
+	public TransactionLogger(String filePath) throws FileNotFoundException, IOException {
 		this(new File(filePath), false);
 	}
 	
-	public TransactionLog(String filePath, boolean create) throws FileNotFoundException, IOException {
+	public TransactionLogger(String filePath, boolean create) throws FileNotFoundException, IOException {
 		this(new File(filePath), create);
 	}
 	
-	public TransactionLog(File file) throws FileNotFoundException, IOException {
+	public TransactionLogger(File file) throws FileNotFoundException, IOException {
 		this(file, false);
 	}
 	
-	public TransactionLog(File file, boolean create) throws FileNotFoundException, IOException {
+	public TransactionLogger(File file, boolean create) throws FileNotFoundException, IOException {
 		if (file == null) {
 			throw new NullPointerException();
 		}

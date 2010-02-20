@@ -1,4 +1,4 @@
-package atomicCommit;
+package transactionProtocol;
 
 public class MessageTimeoutException extends Exception {
 
