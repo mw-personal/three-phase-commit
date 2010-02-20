@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import sun.tools.tree.ThisExpression;
+
 import logger.Logger;
 import logger.TransactionLog;
 
@@ -24,60 +26,111 @@ public class Participant implements ProtocolParticipant {
 	private String uid;
 	private boolean isCoordinator;
 	private TransactionLog logger;
+	private int ranking; // used for election protocol
+	// TODO: we need a better way of handling this
+	//       it is likely each participant will need
+	//       somesort of innerstate.  might be easier
+	//       to begina a participant at some given state
+	// TODO: can different protocols put participants in
+	//       different states? how do we genercise that?
+	private String defaultVote; 
+	
 
 	// sockets for message passing
 	private Map<String, InetSocketAddress> addressBook;
 	private InetSocketAddress address;
 	private ServerSocket inbox;
+	
+	// sockets for heartbeat monitoring
+	private Map<String, InetSocketAddress> heartBook;
+	private InetSocketAddress heartAddress;
 
 	// handles for protocols
 	private Protocol commitProtocol;
 	private Protocol terminationProtocol;
 	private Protocol electionProtocol;
 
-	public Participant(String uid, InetAddress ipAddress, int port,
-			String logFile) throws IOException {
-		this(uid, new InetSocketAddress(ipAddress, port), logFile,
-				new HashMap<String, InetSocketAddress>());
-	}
+//	public Participant(String uid, InetAddress ipAddress, int port,
+//			String logFile) throws IOException {
+//		this(uid, new InetSocketAddress(ipAddress, port), logFile,
+//				new HashMap<String, InetSocketAddress>());
+//	}
+//
+//	public Participant(String uid, InetAddress ipAddress, int port,
+//			String logFile, String configFile) throws IOException {
+//		this(uid, new InetSocketAddress(ipAddress, port), logFile,
+//				createAddressBook(configFile));
+//	}
+//
+//	public Participant(String uid, InetAddress ipAddress, int port,
+//			String logFile, Map<String, InetSocketAddress> addressBook)
+//			throws IOException {
+//		this(
+//				uid,
+//				new InetSocketAddress(ipAddress, port),
+//				logFile,
+//				(addressBook == null) ? new HashMap<String, InetSocketAddress>()
+//						: addressBook);
+//	}
 
-	public Participant(String uid, InetAddress ipAddress, int port,
-			String logFile, String configFile) throws IOException {
-		this(uid, new InetSocketAddress(ipAddress, port), logFile,
-				createAddressBook(configFile));
-	}
-
-	public Participant(String uid, InetAddress ipAddress, int port,
-			String logFile, Map<String, InetSocketAddress> addressBook)
+	
+	public Participant(String uid, int ranking, String defaultVote,
+			InetSocketAddress address, InetSocketAddress heartAddress,
+			Map<String, InetSocketAddress> addressBook,
+			Map<String, InetSocketAddress> heartBook, String logFile)
 			throws IOException {
-		this(
-				uid,
-				new InetSocketAddress(ipAddress, port),
-				logFile,
-				(addressBook == null) ? new HashMap<String, InetSocketAddress>()
-						: addressBook);
-	}
-
-	public Participant(String uid, InetSocketAddress address, String logFile)
-			throws IOException {
-		this(uid, address, logFile, new HashMap<String, InetSocketAddress>());
-	}
-
-	public Participant(String uid, InetSocketAddress address, String logFile,
-			String configFile) throws IOException {
-		this(uid, address, logFile, createAddressBook(configFile));
-	}
-
-	public Participant(String uid, InetSocketAddress address, String logFile,
-			Map<String, InetSocketAddress> addressBook) throws IOException {
 		this.uid = uid;
 		this.isCoordinator = false;
 		this.logger = new TransactionLog(logFile, true);
+		this.ranking = ranking;
+		this.defaultVote = defaultVote;
+		
+		this.address = address;
 		this.addressBook = (addressBook == null) ? new HashMap<String, InetSocketAddress>()
 				: addressBook;
-		this.address = address;
+		this.heartAddress = heartAddress;
+		this.heartBook = (heartBook == null) ? new HashMap<String, InetSocketAddress>()
+				: heartBook;
+		
 		this.inbox = new ServerSocket(this.address.getPort());
 	}
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(this.uid);
+		sb.append("\n{");
+		sb.append("\n  isCoordinator=" + this.isCoordinator);
+		sb.append("\n  logfile=" + this.logger.getFilePath());
+		sb.append("\n  ranking=" + this.ranking);
+		sb.append("\n  defaultVote=" + this.defaultVote);
+		sb.append("\n  address=" + this.address);
+		sb.append("\n  heartAddress=" + this.heartAddress);
+		sb.append("\n}");
+		
+		return sb.toString();
+	}
+	
+//	public Participant(String uid, InetSocketAddress address, String logFile)
+//			throws IOException {
+//		this(uid, address, logFile, new HashMap<String, InetSocketAddress>());
+//	}
+//
+//	public Participant(String uid, InetSocketAddress address, String logFile,
+//			String configFile) throws IOException {
+//		this(uid, address, logFile, createAddressBook(configFile));
+//	}
+//
+//	public Participant(String uid, InetSocketAddress address, String logFile,
+//			Map<String, InetSocketAddress> addressBook) throws IOException {
+//		this.uid = uid;
+//		this.isCoordinator = false;
+//		this.logger = new TransactionLog(logFile, true);
+//		this.addressBook = (addressBook == null) ? new HashMap<String, InetSocketAddress>()
+//				: addressBook;
+//		this.address = address;
+//		this.inbox = new ServerSocket(this.address.getPort());
+//	}
 
 	//
 	// general participant methods

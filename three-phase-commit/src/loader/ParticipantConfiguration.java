@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public class ParticipantConfiguration {
 	public static final String INBOX_PORT = "inbox-port";
 	public static final String HEART_IP = "heartbeat-ip";
 	public static final String HEART_PORT = "heartbeat-port";
-	public static final String PRIORITY = "priority";
+	public static final String RANKING = "ranking";
 	public static final String DEFAULT_VOTE = "default-vote";
 	public static final String LOG_FILE = "log-file";
 	
@@ -50,24 +51,26 @@ public class ParticipantConfiguration {
 		JSONObject jobj = new JSONObject(new String(b));
 		JSONArray jarray = jobj.getJSONArray(PARTICIPANTS);
 		
+		ArrayList<Participant> result = new ArrayList<Participant>(jarray.length());
+		
 		for(int i = 0; i < jarray.length(); i++) {
 			JSONObject j = jarray.getJSONObject(i);
 			
 			String uid = j.getString(UID);
-			InetSocketAddress inboxAddress = new InetSocketAddress(
+			InetSocketAddress address = new InetSocketAddress(
 					InetAddress.getByName(j.getString(INBOX_IP)),
 					j.getInt(INBOX_PORT));
 			InetSocketAddress heartAddress = new InetSocketAddress(
 					InetAddress.getByName(j.getString(HEART_IP)),
 					j.getInt(HEART_PORT));
-			int priority = j.getInt(PRIORITY);
+			int ranking = j.getInt(RANKING);
 			String defaultVote = j.getString(DEFAULT_VOTE);
 			String logFile = j.getString(LOG_FILE);
 			
-			//Participant p = new Participant(j.getString(ID), address, "mylogfile");
+			result.add(new Participant(uid, ranking, defaultVote, address, heartAddress, null, null, logFile));
 		}
 		
-		return null;
+		return result;
 	}
 		
 	public static void generateParticipantConfigurationFile(int numParticipants, int port, File file) throws IOException {
@@ -96,9 +99,9 @@ public class ParticipantConfiguration {
 				jobj.put(INBOX_PORT, currentPort++);
 				jobj.put(HEART_IP, ipAddress);
 				jobj.put(HEART_PORT, currentPort++);
-				jobj.put(PRIORITY, -1);
+				jobj.put(RANKING, -1);
 				jobj.put(DEFAULT_VOTE, "?");
-				jobj.put(LOG_FILE, "mylogfile" + i + ".txt");
+				jobj.put(LOG_FILE, "logs/mylogfile" + i + ".txt");
 				
 				jarray.put(jobj);
 			}

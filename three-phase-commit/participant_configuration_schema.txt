@@ -1,0 +1,12 @@
+{"participants": [
+    {
+        "default-vote": {"type":"string"},
+        "heartbeat-ip": {"type":"string"},
+        "heartbeat-port": {"type":"integer"},
+        "inbox-ip": {"type":"string"},
+        "inbox-port": {"type":"integer"},
+        "log-file": {"type":"string"},
+        "ranking": {"type":"integer"},
+        "uid": {"type":"string"}
+    }
+]}
