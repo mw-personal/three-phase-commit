@@ -1,4 +1,4 @@
-package atomicCommit;
+package transactionProtocol;
 
 public enum Message {
 	VOTE_REQ,

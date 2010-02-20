@@ -4,18 +4,22 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import atomicCommit.Participant;
+import transactionProtocol.Participant;
+import transactionProtocol.Request;
+
 
 public class ParticipantConfiguration {
 	
@@ -31,8 +35,8 @@ public class ParticipantConfiguration {
 	public static final String LOG_FILE = "log-file";
 	
 	// reader
-	public static List<Participant> readParticipantConfiguration(String configFile) throws IOException, JSONException {
-		return readParticipantConfiguration(new File(configFile));
+	public static <P extends Participant<? extends Request>> List<P> readParticipantConfiguration(Class<P> type, String configFile) throws IOException, JSONException {
+		return readParticipantConfiguration(type, new File(configFile));
 	}
 	
 	// writer
@@ -40,7 +44,7 @@ public class ParticipantConfiguration {
 		generateParticipantConfigurationFile(numParticipants, port, new File(filePath));
 	}
 	
-	public static List<Participant> readParticipantConfiguration(File configFile) throws IOException, JSONException {
+	public static <P extends Participant<? extends Request>> List<P> readParticipantConfiguration(Class<P> type, File configFile) throws IOException, JSONException {
 		// read entire file
 		FileInputStream fis = new FileInputStream(configFile);
 		byte[] b = new byte[(int) configFile.length()];
@@ -51,7 +55,7 @@ public class ParticipantConfiguration {
 		JSONObject jobj = new JSONObject(new String(b));
 		JSONArray jarray = jobj.getJSONArray(PARTICIPANTS);
 		
-		ArrayList<Participant> result = new ArrayList<Participant>(jarray.length());
+		ArrayList<P> result = new ArrayList<P>(jarray.length());
 		
 		for(int i = 0; i < jarray.length(); i++) {
 			JSONObject j = jarray.getJSONObject(i);
@@ -67,7 +71,33 @@ public class ParticipantConfiguration {
 			String defaultVote = j.getString(DEFAULT_VOTE);
 			String logFile = j.getString(LOG_FILE);
 			
-			result.add(new Participant(uid, ranking, defaultVote, address, heartAddress, null, null, logFile));
+			P p;
+			try {
+				p = type.getDeclaredConstructor(String.class, int.class,
+						String.class, InetSocketAddress.class,
+						InetSocketAddress.class, Map.class, Map.class,
+						String.class).newInstance(uid, ranking, defaultVote,
+						address, heartAddress, null, null, logFile);
+				result.add(p);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		return result;

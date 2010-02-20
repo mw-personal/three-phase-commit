@@ -1,31 +1,25 @@
-package atomicCommit;
+package transactionProtocol;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-
-import sun.tools.tree.ThisExpression;
 
 import logger.Logger;
-import logger.TransactionLog;
+import logger.TransactionLogger;
 
-public class Participant implements ProtocolParticipant {
+public abstract class Participant<R extends Request> {
 
 	// general information regarding a process
 	private String uid;
 	private boolean isCoordinator;
-	private TransactionLog logger;
+	private Logger logger;
 	private int ranking; // used for election protocol
 	// TODO: we need a better way of handling this
 	//       it is likely each participant will need
@@ -42,13 +36,13 @@ public class Participant implements ProtocolParticipant {
 	private ServerSocket inbox;
 	
 	// sockets for heartbeat monitoring
-	private Map<String, InetSocketAddress> heartBook;
+//	private Map<String, InetSocketAddress> heartBook;
 	private InetSocketAddress heartAddress;
 
 	// handles for protocols
 	private Protocol commitProtocol;
 	private Protocol terminationProtocol;
-	private Protocol electionProtocol;
+//	private Protocol electionProtocol;
 
 //	public Participant(String uid, InetAddress ipAddress, int port,
 //			String logFile) throws IOException {
@@ -81,7 +75,7 @@ public class Participant implements ProtocolParticipant {
 			throws IOException {
 		this.uid = uid;
 		this.isCoordinator = false;
-		this.logger = new TransactionLog(logFile, true);
+		this.logger = new TransactionLogger(logFile, true);
 		this.ranking = ranking;
 		this.defaultVote = defaultVote;
 		
@@ -89,12 +83,13 @@ public class Participant implements ProtocolParticipant {
 		this.addressBook = (addressBook == null) ? new HashMap<String, InetSocketAddress>()
 				: addressBook;
 		this.heartAddress = heartAddress;
-		this.heartBook = (heartBook == null) ? new HashMap<String, InetSocketAddress>()
-				: heartBook;
+//		this.heartBook = (heartBook == null) ? new HashMap<String, InetSocketAddress>()
+//				: heartBook;
 		
 		this.inbox = new ServerSocket(this.address.getPort());
 	}
 	
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		
@@ -136,6 +131,10 @@ public class Participant implements ProtocolParticipant {
 	// general participant methods
 	//
 
+	public void setLog(Logger logger) {
+		this.logger = logger;
+	}
+	
 	public Logger getLog() {
 		return this.logger;
 	}
@@ -152,24 +151,18 @@ public class Participant implements ProtocolParticipant {
 		return this.isCoordinator;
 	}
 
-	public void setCoordinator(boolean t) {
-		this.isCoordinator = t;
+	public void setCoordinator(boolean isCoordinator) {
+		this.isCoordinator = isCoordinator;
 	}
 
-	public void abort() {
-		// TODO Auto-generated method stub
-
-	}
-
-	public Vote castVote() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void commit() {
-		// TODO Auto-generated method stub
-
-	}
+	//
+	// methods for changing state
+	//
+	
+	//public abstract void start();
+	public abstract void abort();
+	public abstract Vote castVote(R r);
+	public abstract void commit();
 
 	//
 	// methods for getting/setting protocol handles
@@ -280,22 +273,22 @@ public class Participant implements ProtocolParticipant {
 	// private methods
 	//
 
-	private static Map<String, InetSocketAddress> createAddressBook(
-			String configFile) throws IOException {
-		HashMap<String, InetSocketAddress> result = new HashMap<String, InetSocketAddress>();
-		BufferedReader f = new BufferedReader(new FileReader(configFile));
-
-		String s = f.readLine();
-		while (s != null) {
-			String[] is = s.split("::");
-			result.put(is[0], new InetSocketAddress(is[1], Integer
-					.parseInt(is[2])));
-			s = f.readLine();
-		}
-
-		f.close();
-
-		return result;
-	}
+//	private static Map<String, InetSocketAddress> createAddressBook(
+//			String configFile) throws IOException {
+//		HashMap<String, InetSocketAddress> result = new HashMap<String, InetSocketAddress>();
+//		BufferedReader f = new BufferedReader(new FileReader(configFile));
+//
+//		String s = f.readLine();
+//		while (s != null) {
+//			String[] is = s.split("::");
+//			result.put(is[0], new InetSocketAddress(is[1], Integer
+//					.parseInt(is[2])));
+//			s = f.readLine();
+//		}
+//
+//		f.close();
+//
+//		return result;
+//	}
 
 }

@@ -1,4 +1,4 @@
-package applications;
+package applications.banking;
 
 public interface Bank {
 	

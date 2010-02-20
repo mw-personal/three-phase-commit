@@ -3,12 +3,13 @@ package threePhaseCommit;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-import atomicCommit.Message;
-import atomicCommit.MessageTimeoutException;
-import atomicCommit.Participant;
-import atomicCommit.Protocol;
-import atomicCommit.TransactionProtocol;
-import atomicCommit.Vote;
+import transactionProtocol.Message;
+import transactionProtocol.MessageTimeoutException;
+import transactionProtocol.Participant;
+import transactionProtocol.Protocol;
+import transactionProtocol.TransactionProtocol;
+import transactionProtocol.Vote;
+
 
 public class ThreePhaseCommitProtocol implements TransactionProtocol {
 	
