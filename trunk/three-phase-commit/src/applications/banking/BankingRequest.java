@@ -3,6 +3,9 @@ package applications.banking;
 import transactionProtocol.Request;
 
 public class BankingRequest implements Request {
+
+	private static final long serialVersionUID = -4778078068961838085L;
+
 	public enum BankingRequestType {
 		CREATE,
 		DELETE,
@@ -13,11 +16,6 @@ public class BankingRequest implements Request {
 	private final BankingRequestType type;
 	private final String accountName;
 	private final double amount;
-	
-	public BankingRequest(String req) {
-		// TODO: parse from string
-		this(BankingRequestType.CREATE, "", 0);	
-	}
 	
 	public BankingRequest(BankingRequestType type, String accountName, double amount) {
 		this.type = type;
@@ -35,5 +33,9 @@ public class BankingRequest implements Request {
 
 	public double getAmount() {
 		return amount;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
 	}
 }
