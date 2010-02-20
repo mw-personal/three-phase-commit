@@ -5,9 +5,9 @@
         "heartbeat-port": 8081,
         "inbox-ip": "192.168.2.5",
         "inbox-port": 8080,
-        "log-file": "mylogfile0.txt",
-        "priority": -1,
-        "uid": "dd79d8b4-26a7-462e-a876-4647c0c88f4d"
+        "log-file": "logs/mylogfile0.txt",
+        "ranking": -1,
+        "uid": "abc1bd3d-3cfa-48b6-8627-0aa647526559"
     },
     {
         "default-vote": "?",
@@ -15,9 +15,9 @@
         "heartbeat-port": 8083,
         "inbox-ip": "192.168.2.5",
         "inbox-port": 8082,
-        "log-file": "mylogfile1.txt",
-        "priority": -1,
-        "uid": "64b22a7b-3ceb-4156-81d5-1c86894375de"
+        "log-file": "logs/mylogfile1.txt",
+        "ranking": -1,
+        "uid": "430624b5-063d-4343-ae80-8f026ffe4f55"
     },
     {
         "default-vote": "?",
@@ -25,9 +25,9 @@
         "heartbeat-port": 8085,
         "inbox-ip": "192.168.2.5",
         "inbox-port": 8084,
-        "log-file": "mylogfile2.txt",
-        "priority": -1,
-        "uid": "7192650a-713c-4c24-b9d2-2718573b3afd"
+        "log-file": "logs/mylogfile2.txt",
+        "ranking": -1,
+        "uid": "3872af40-499e-4dc0-94b9-2e91fa927c26"
     },
     {
         "default-vote": "?",
@@ -35,9 +35,9 @@
         "heartbeat-port": 8087,
         "inbox-ip": "192.168.2.5",
         "inbox-port": 8086,
-        "log-file": "mylogfile3.txt",
-        "priority": -1,
-        "uid": "23f883f9-366f-4721-a39f-1d0c2c92a5ce"
+        "log-file": "logs/mylogfile3.txt",
+        "ranking": -1,
+        "uid": "c2cd3b5b-7b5b-44fc-9294-9fc324d00abb"
     },
     {
         "default-vote": "?",
@@ -45,8 +45,8 @@
         "heartbeat-port": 8089,
         "inbox-ip": "192.168.2.5",
         "inbox-port": 8088,
-        "log-file": "mylogfile4.txt",
-        "priority": -1,
-        "uid": "1af68ef0-164b-4248-8fed-58506bfbdc86"
+        "log-file": "logs/mylogfile4.txt",
+        "ranking": -1,
+        "uid": "8c1ba942-3831-4ae1-8e48-9bcb6c79fd1b"
     }
 ]}

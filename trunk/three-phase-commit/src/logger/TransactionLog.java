@@ -45,6 +45,10 @@ public class TransactionLog implements Logger {
 		this.writer = new FileWriter(this.file);
 	}
 
+	public String getFilePath() {
+		return this.filePath;
+	}
+	
 	public boolean clear() {
 		return false;
 	}
