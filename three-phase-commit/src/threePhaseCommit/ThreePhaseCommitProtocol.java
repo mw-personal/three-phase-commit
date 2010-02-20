@@ -89,7 +89,7 @@ public class ThreePhaseCommitProtocol implements TransactionProtocol {
 			}
 
 			protected void participant(Participant p) {
-
+				//
 				// wait for VOTE-REQ from coordinator
 				try {
 					// TODO: should we check that we received the
