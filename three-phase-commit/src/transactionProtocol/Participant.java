@@ -1,8 +1,11 @@
 package transactionProtocol;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -202,11 +205,10 @@ public abstract class Participant<R extends Request> {
 	public void sendMessage(InetSocketAddress address, Message m) {
 		try {
 			Socket server = new Socket(address.getAddress(), address.getPort());
-			PrintWriter out = new PrintWriter(server.getOutputStream());
-
-			// write uuid::message
-			out.write(m.name());
-			out.close();
+			ObjectOutputStream serializer = 
+				new ObjectOutputStream(server.getOutputStream());
+			serializer.writeObject(m);
+			serializer.close();
 			server.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -246,24 +248,25 @@ public abstract class Participant<R extends Request> {
 //	}
 
 	public Message receiveMessage(int timeout) throws MessageTimeoutException {
-		String data = null;
+		Object obj = null;
 		try {
 			this.inbox.setSoTimeout(timeout);
 			Socket client = this.inbox.accept();
-			BufferedReader in = new BufferedReader(new InputStreamReader(client
-					.getInputStream()));
+			ObjectInputStream serializer = new ObjectInputStream(client.getInputStream());
 
-			data = in.readLine();
-			in.close();
+			obj = serializer.readObject();
+			serializer.close();
 			client.close();
 		} catch (SocketTimeoutException e) {
 			throw new MessageTimeoutException(e);
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
 
-		if (data != null) {
-			return Message.valueOf(data);
+		if (obj != null && obj instanceof Message) {
+			return (Message) obj;
 		} else {
 			return null;
 		}

@@ -56,4 +56,17 @@ public class Message implements Serializable {
 		return request;
 	}
 	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		sb.append("\n  " + type);
+		sb.append(",\n  " + source);
+		sb.append(",\n  " + dest);
+		sb.append(",\n  " + timestamp);
+		sb.append(",\n  " + request);
+		sb.append("\n}");
+		
+		return sb.toString();
+	}
+	
 }

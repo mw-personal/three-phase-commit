@@ -1,52 +1,22 @@
 {"participants": [
     {
         "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
+        "heartbeat-ip": "192.168.2.164",
         "heartbeat-port": 8081,
-        "inbox-ip": "192.168.2.5",
+        "inbox-ip": "192.168.2.164",
         "inbox-port": 8080,
         "log-file": "logs/mylogfile0.txt",
         "ranking": -1,
-        "uid": "abc1bd3d-3cfa-48b6-8627-0aa647526559"
+        "uid": "5e1a0b3c-d62d-4e7c-9aa0-d08e6d24b345"
     },
     {
         "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
+        "heartbeat-ip": "192.168.2.164",
         "heartbeat-port": 8083,
-        "inbox-ip": "192.168.2.5",
+        "inbox-ip": "192.168.2.164",
         "inbox-port": 8082,
         "log-file": "logs/mylogfile1.txt",
         "ranking": -1,
-        "uid": "430624b5-063d-4343-ae80-8f026ffe4f55"
-    },
-    {
-        "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
-        "heartbeat-port": 8085,
-        "inbox-ip": "192.168.2.5",
-        "inbox-port": 8084,
-        "log-file": "logs/mylogfile2.txt",
-        "ranking": -1,
-        "uid": "3872af40-499e-4dc0-94b9-2e91fa927c26"
-    },
-    {
-        "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
-        "heartbeat-port": 8087,
-        "inbox-ip": "192.168.2.5",
-        "inbox-port": 8086,
-        "log-file": "logs/mylogfile3.txt",
-        "ranking": -1,
-        "uid": "c2cd3b5b-7b5b-44fc-9294-9fc324d00abb"
-    },
-    {
-        "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
-        "heartbeat-port": 8089,
-        "inbox-ip": "192.168.2.5",
-        "inbox-port": 8088,
-        "log-file": "logs/mylogfile4.txt",
-        "ranking": -1,
-        "uid": "8c1ba942-3831-4ae1-8e48-9bcb6c79fd1b"
+        "uid": "94baee43-3be5-492b-a774-bab8ab7d6426"
     }
 ]}
