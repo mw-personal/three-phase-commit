@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
@@ -205,10 +206,7 @@ public abstract class Participant<R extends Request> {
 	public void sendMessage(InetSocketAddress address, Message m) {
 		try {
 			Socket server = new Socket(address.getAddress(), address.getPort());
-			ObjectOutputStream serializer = 
-				new ObjectOutputStream(server.getOutputStream());
-			serializer.writeObject(m);
-			serializer.close();
+			Message.writeObject(server.getOutputStream(), m);
 			server.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -248,28 +246,25 @@ public abstract class Participant<R extends Request> {
 //	}
 
 	public Message receiveMessage(int timeout) throws MessageTimeoutException {
-		Object obj = null;
+		Message m = null;
+		
 		try {
 			this.inbox.setSoTimeout(timeout);
 			Socket client = this.inbox.accept();
-			ObjectInputStream serializer = new ObjectInputStream(client.getInputStream());
-
-			obj = serializer.readObject();
-			serializer.close();
+			m = Message.readObject(client.getInputStream());
 			client.close();
-		} catch (SocketTimeoutException e) {
-			throw new MessageTimeoutException(e);
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		if (obj != null && obj instanceof Message) {
-			return (Message) obj;
-		} else {
-			return null;
-		}
+		return m;
 	}
 
 	//

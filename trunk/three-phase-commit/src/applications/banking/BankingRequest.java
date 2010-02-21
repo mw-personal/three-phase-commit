@@ -38,7 +38,7 @@ public class BankingRequest implements Request {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
-	
+		
 	public String toString() {
 		return "{" + type + ":" + accountName + ":" + amount + "}";
 	}

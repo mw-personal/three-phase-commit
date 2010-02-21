@@ -1,6 +1,12 @@
 package transactionProtocol;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.Socket;
 
 public class Message implements Serializable {
 	
@@ -67,6 +73,26 @@ public class Message implements Serializable {
 		sb.append("\n}");
 		
 		return sb.toString();
+	}
+	
+	public static void writeObject(OutputStream stream, Message m) throws IOException {
+		ObjectOutputStream oos = 
+			new ObjectOutputStream(stream);
+		oos.writeObject(m);
+		oos.close();
+	}
+	
+	public static Message readObject(InputStream stream) throws IOException, ClassNotFoundException {
+		ObjectInputStream ois =
+			new ObjectInputStream(stream);
+		Object obj = ois.readObject();
+		ois.close();
+		
+		if(obj != null && obj instanceof Message) {
+			return (Message) obj;
+		} else {
+			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
+		}
 	}
 	
 }
