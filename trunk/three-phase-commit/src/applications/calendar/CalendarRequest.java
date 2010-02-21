@@ -4,6 +4,6 @@ import transactionProtocol.Request;
 
 public class CalendarRequest implements Request {
 
-	private static long serialVersionUID = -4788203264363451388L;
+	private static final long serialVersionUID = -4788203264363451388L;
 
 }
