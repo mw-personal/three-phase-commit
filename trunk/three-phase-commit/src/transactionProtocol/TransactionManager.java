@@ -14,6 +14,9 @@ import applications.banking.BankingParticipant;
 /**
  * The TransactionManager is responsible for initiating the RunnableParticipant threads
  * as well as communicating between the outside world and the Distributed System.
+ * 
+ * The TransactionManager speaks to paticipants and the outside world through TCP, however the coordinator and the outside
+ * world speak to the TransactionManager directly (using sendMessage() and sendReply())
  * @author cjlax26
  *
  * @param <P>
@@ -66,7 +69,16 @@ public class TransactionManager<P extends Participant<? extends Request>>{
 		}
 	}
 	
-	public void sendReply(){
-		
+	/**
+	 * Send reply back to outside world
+	 */
+	public void sendReply(Reply reply){
+		try{
+			Socket client = reply.getServer().accept();
+			reply.writeObject(client.getOutputStream());
+			client.close();
+		} catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 }
