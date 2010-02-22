@@ -51,6 +51,14 @@ public class ParticipantLauncher<P extends Participant<? extends Request>> {
 		return threads.get(uid).cancel(true);
 	}
 	
+	public HashMap<String, Future> getThreads(){
+		return threads;
+	}
+	
+	public List<P> getParticipants(){
+		return peeps;
+	}
+	
 	/*
 	public void start() {
 		for (final P p : this.peeps) {
@@ -63,9 +71,6 @@ public class ParticipantLauncher<P extends Participant<? extends Request>> {
 		}
 	}*/
 	
-	public void killParticipant(){
-		
-	}
 	
 	public void stop() {
 		this.executorService.shutdownNow();
