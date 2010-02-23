@@ -14,6 +14,7 @@ import transactionProtocol.*;
 public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 	
 	private boolean started;
+	private Map<String, String> pointsToFail;
 	private Map<String, P> participantMap;
 	private Map<String, Thread> participantThreads;
 	private List<String> failedParticipants;
@@ -26,7 +27,7 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 		ParticipantConfiguration<P> pc = new ParticipantConfiguration<P>(type, configFile);
 		
 		List<P> peeps = pc.getParticipants();
-		Map<String, String> pointsToFail = pc.getPointsToFail();
+		this.pointsToFail = pc.getPointsToFail();
 		this.participantMap = new HashMap<String, P>();
 		this.participantThreads = new HashMap<String, Thread>();
 		this.failedParticipants = new ArrayList<String>();
@@ -35,7 +36,7 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 		for (P p : peeps) {
 			this.participantMap.put(p.getUid(), p);
 			this.participantThreads
-					.put(p.getUid(), new ParticipantThread<P>(p, pointsToFail.get(p.getUid())));
+					.put(p.getUid(), new ParticipantThread<P>(p, this.pointsToFail.get(p.getUid())));
 		}
 		this.started = false;
 	}
@@ -68,7 +69,7 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 			return false;
 		}
 				
-		ParticipantThread<P> pt = new ParticipantThread<P>(participant, "omg");
+		ParticipantThread<P> pt = new ParticipantThread<P>(participant, this.pointsToFail.get(participant.getUid()));
 		this.failedParticipants.remove(uid);
 		this.participantThreads.put(uid, pt);
 		pt.start();
