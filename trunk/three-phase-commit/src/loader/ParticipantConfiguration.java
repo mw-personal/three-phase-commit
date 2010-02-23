@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -56,6 +57,7 @@ public class ParticipantConfiguration {
 		JSONArray jarray = jobj.getJSONArray(PARTICIPANTS);
 		
 		ArrayList<P> result = new ArrayList<P>(jarray.length());
+		Map<String, InetSocketAddress> addressBook = new HashMap<String, InetSocketAddress>();
 		
 		for(int i = 0; i < jarray.length(); i++) {
 			JSONObject j = jarray.getJSONObject(i);
@@ -79,6 +81,7 @@ public class ParticipantConfiguration {
 						String.class).newInstance(uid, ranking, defaultVote,
 						address, heartAddress, null, null, logFile);
 				result.add(p);
+				addressBook.put(uid, address);
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -98,6 +101,12 @@ public class ParticipantConfiguration {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		
+		// we've generated a list of all participants, but we need to give
+		// each participant an address book
+		for (P p : result) {
+			p.setAddressBook(new HashMap<String, InetSocketAddress>(addressBook));
 		}
 		
 		return result;
