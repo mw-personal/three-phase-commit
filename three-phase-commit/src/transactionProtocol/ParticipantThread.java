@@ -29,7 +29,7 @@ public class ParticipantThread<P extends Participant<? extends Request>> extends
 	}
 	
 	public boolean isInterrupted(String s) {
-		return (s == null) ? isInterrupted() : s.equals(this.pointToFail);
+		return (s == null) ? isInterrupted() : ((s.equals(this.pointToFail)) ? true : isInterrupted());
 	}
 
 	/* (non-Javadoc)
