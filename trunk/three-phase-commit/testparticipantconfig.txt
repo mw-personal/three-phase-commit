@@ -7,7 +7,7 @@
         "inbox-port": 8080,
         "log-file": "logs/mylogfile0.txt",
         "ranking": -1,
-        "uid": "5e1a0b3c-d62d-4e7c-9aa0-d08e6d24b345"
+        "uid": "2554663a-eb57-4dda-9611-01928e374103"
     },
     {
         "default-vote": "?",
@@ -17,6 +17,6 @@
         "inbox-port": 8082,
         "log-file": "logs/mylogfile1.txt",
         "ranking": -1,
-        "uid": "94baee43-3be5-492b-a774-bab8ab7d6426"
+        "uid": "9bdb3e6b-f5ba-45cd-ade9-81c84e941e3f"
     }
 ]}
