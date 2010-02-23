@@ -6,6 +6,7 @@
         "inbox-ip": {"type":"string"},
         "inbox-port": {"type":"integer"},
         "log-file": {"type":"string"},
+        "point-to-fail": {"type":"string"},
         "ranking": {"type":"integer"},
         "uid": {"type":"string"}
     }

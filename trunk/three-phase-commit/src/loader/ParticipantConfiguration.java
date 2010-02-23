@@ -22,7 +22,7 @@ import transactionProtocol.Participant;
 import transactionProtocol.Request;
 
 
-public class ParticipantConfiguration {
+public class ParticipantConfiguration<P extends Participant<? extends Request>> {
 	
 	// expected JSON tags!
 	public static final String PARTICIPANTS = "participants";
@@ -34,18 +34,28 @@ public class ParticipantConfiguration {
 	public static final String RANKING = "ranking";
 	public static final String DEFAULT_VOTE = "default-vote";
 	public static final String LOG_FILE = "log-file";
-	
-	// reader
-	public static <P extends Participant<? extends Request>> List<P> readParticipantConfiguration(Class<P> type, String configFile) throws IOException, JSONException {
-		return readParticipantConfiguration(type, new File(configFile));
-	}
-	
+	public static final String POINT_TO_FAIL = "point-to-fail";
+		
 	// writer
 	public static void generateParticipantConfigurationFile(int numParticipants, int port, String filePath) throws IOException {
 		generateParticipantConfigurationFile(numParticipants, port, new File(filePath));
 	}
 	
-	public static <P extends Participant<? extends Request>> List<P> readParticipantConfiguration(Class<P> type, File configFile) throws IOException, JSONException {
+	public static void generateParticipantConfigurationFile(int numParticipants, int port, File file) throws IOException {
+		FileWriter fw = new FileWriter(file);
+		
+		fw.write(generateParticipantConfiguration(numParticipants, port));
+		fw.close();
+	}
+
+	private JSONObject jobj;
+	private Class<P> type;
+	
+	public ParticipantConfiguration(Class<P> type, String configFile) throws IOException, JSONException {
+		this(type, new File(configFile));
+	}
+	
+	public ParticipantConfiguration(Class<P> type, File configFile) throws IOException, JSONException {
 		// read entire file
 		FileInputStream fis = new FileInputStream(configFile);
 		byte[] b = new byte[(int) configFile.length()];
@@ -53,8 +63,13 @@ public class ParticipantConfiguration {
 		fis.close();
 		
 		// create json object from file
-		JSONObject jobj = new JSONObject(new String(b));
-		JSONArray jarray = jobj.getJSONArray(PARTICIPANTS);
+		this.jobj = new JSONObject(new String(b));
+		this.type = type;
+	}
+	
+	// reader	
+	public List<P> getParticipants() throws JSONException, UnknownHostException {
+		JSONArray jarray = this.jobj.getJSONArray(PARTICIPANTS);
 		
 		ArrayList<P> result = new ArrayList<P>(jarray.length());
 		Map<String, InetSocketAddress> addressBook = new HashMap<String, InetSocketAddress>();
@@ -111,14 +126,23 @@ public class ParticipantConfiguration {
 		
 		return result;
 	}
-		
-	public static void generateParticipantConfigurationFile(int numParticipants, int port, File file) throws IOException {
-		FileWriter fw = new FileWriter(file);
-		
-		fw.write(generateParticipantConfiguration(numParticipants, port));
-		fw.close();
-	}
 	
+	public Map<String, String> getPointsToFail() throws JSONException {
+		JSONArray jarray = this.jobj.getJSONArray(PARTICIPANTS);
+		
+		Map<String, String> result = new HashMap<String, String>();
+		
+		for(int i = 0; i < jarray.length(); i++) {
+			JSONObject j = jarray.getJSONObject(i);
+			
+			String uid = j.getString(UID);
+			String pointToFail = j.getString(POINT_TO_FAIL);
+			result.put(uid, pointToFail);
+		}
+		
+		return result;
+	}
+			
 	private static String generateParticipantConfiguration(int numParticipants, int port) {	
 		final JSONArray jarray = new JSONArray();
 		String ipAddress;
@@ -141,6 +165,7 @@ public class ParticipantConfiguration {
 				jobj.put(RANKING, -1);
 				jobj.put(DEFAULT_VOTE, "?");
 				jobj.put(LOG_FILE, "logs/mylogfile" + i + ".txt");
+				jobj.put(POINT_TO_FAIL, "");
 				
 				jarray.put(jobj);
 			}
