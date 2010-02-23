@@ -2,8 +2,11 @@ package transactionProtocol;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+
+import org.json.JSONException;
 
 import com.sun.tools.internal.xjc.reader.Messages;
 
@@ -21,28 +24,20 @@ import applications.banking.BankingParticipant;
  *
  * @param <P>
  */
-public class TransactionManager<P extends Participant<? extends Request>>{
+public class TransactionManager<P extends Participant<? extends Request>> {
 	
 	public static final String MANAGER = "MANAGER";
 	
+	// private P coordinator;
 	private List<P> addressBook;
-	private ParticipantLauncher launcher;
-	private static TransactionManager manager;
-	
-	private TransactionManager(Class<P> type, String config) throws Exception{
-		addressBook = ParticipantConfiguration.readParticipantConfiguration(type, config);	
-		launcher = new ParticipantLauncher(type, config);
-	}
-	
-	public static TransactionManager getTransactionManager(){
-		return manager;
-	}
-	
-	public static TransactionManager getTransactionManager(Class type, String config) throws Exception{
-		if(manager == null){
-			manager = new TransactionManager(type, config);
-		}
-		return manager;
+	private ParticipantThreadPool<P> launcher;
+	private ServerSocket inbox;
+
+	public TransactionManager(Class<P> type, String config, int port) throws IOException, JSONException {
+		// this.coordinator = // run election protocol(addressBook); 
+		this.launcher = new ParticipantThreadPool<P>(type, config);
+		this.addressBook = this.launcher.getParticipants();
+		this.inbox = new ServerSocket(port);
 	}
 	
 	public void initParticipants(){
@@ -69,16 +64,16 @@ public class TransactionManager<P extends Participant<? extends Request>>{
 		}
 	}
 	
-	/**
-	 * Send reply back to outside world
-	 */
-	public void sendReply(Reply reply){
-		try{
-			Socket client = reply.getServer().accept();
-			reply.writeObject(client.getOutputStream());
-			client.close();
-		} catch(Exception e){
-			e.printStackTrace();
-		}
-	}
+//	/**
+//	 * Send reply back to outside world
+//	 */
+//	public void sendReply(Reply reply){
+//		try{
+//			Socket client = reply.getServer().accept();
+//			reply.writeObject(client.getOutputStream());
+//			client.close();
+//		} catch(Exception e){
+//			e.printStackTrace();
+//		}
+//	}
 }
