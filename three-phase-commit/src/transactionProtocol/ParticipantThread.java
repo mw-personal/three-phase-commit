@@ -15,7 +15,6 @@ public class ParticipantThread<P extends Participant<? extends Request>> extends
 	public void interrupt() {
 		// TODO Auto-generated method stub
 		super.interrupt();
-		System.out.println("WHATS IS HAPPENING!!!");
 	}
 
 	/* (non-Javadoc)
@@ -25,8 +24,19 @@ public class ParticipantThread<P extends Participant<? extends Request>> extends
 	public synchronized void start() {
 		// TODO Auto-generated method stub
 		super.start();
-		participant.start();
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Thread#run()
+	 */
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		super.run();
+		participant.startCommitProtocol();
+	}
+	
+	
 
 	
 	

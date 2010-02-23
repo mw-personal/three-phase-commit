@@ -7,6 +7,10 @@ import org.json.JSONException;
 
 import transactionProtocol.Message;
 import transactionProtocol.MessageTimeoutException;
+import transactionProtocol.Participant;
+import transactionProtocol.Protocol;
+import transactionProtocol.Request;
+import transactionProtocol.Message.MessageType;
 
 import applications.banking.BankingParticipant;
 import applications.banking.BankingRequest;
@@ -15,47 +19,48 @@ import applications.calendar.CalendarParticipant;
 
 public class TestLoader {
 
-	public static void main(String[] args) throws InterruptedException {
-		final String TEST_FILE = "testparticipantconfig.txt";
+	public static void main(String[] args) throws IOException, JSONException, InterruptedException {
+		final String configFile = "testparticipantconfig.txt";
 		
-		try {
-			ParticipantConfiguration.generateParticipantConfigurationFile(2,
-					8080, TEST_FILE);
+		ParticipantConfiguration.generateParticipantConfigurationFile(4, 8090, configFile);
 			
-			List<BankingParticipant> addressBook = ParticipantConfiguration.readParticipantConfiguration(BankingParticipant.class, TEST_FILE);
-
-			BankingParticipant bp1 = addressBook.get(0);
-			BankingParticipant bp2 = addressBook.get(1);
-			
-			bp1.sendMessage(bp2.getAddress(), new Message(Message.MessageType.ACK, bp1.getUid(), bp2.getUid(), System.currentTimeMillis(), 
-					new BankingRequest(BankingRequestType.CREATE, "jose", 100.0)));
-			System.out.println(bp2.receiveMessage(0));
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MessageTimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		ParticipantThreadPool<BankingParticipant> ptp = 
+			new ParticipantThreadPool<BankingParticipant>(BankingParticipant.class, configFile);
+		
+		for (BankingParticipant bp : ptp.getParticipants()) {
+			bp.setCommitProtocol(new Protocol() {
+				public void start(Participant<? extends Request> p) {
+					try {
+						// send a broadcast to all participants
+						p.broadcastMessage(MessageType.ACK, null);
+						
+						// wait to receive a message from all participants
+						for (int i = 0; i < 3; i++) {
+							try {
+								if (Thread.currentThread().isInterrupted()) {
+									throw new InterruptedException();
+								}
+								Message m = p.receiveMessage(1000);
+								System.out.println(p.getUid() + " received the following message:\n" + m);
+							} catch (MessageTimeoutException e) {
+								e.printStackTrace();
+							}
+						}
+					} catch (InterruptedException e) {
+						System.out.println(p.getUid() + " has been interrupted and is now quitting!");
+					}
+				}
+			});
 		}
 		
+		ptp.start();
+		ptp.stopParticipant(ptp.getParticipants().get(0).getUid());
+		Thread.sleep(5000);
+		Thread.sleep(5000);
 		
-		
-//		final ParticipantLauncher<BankingParticipant> pl = 
-//			new ParticipantLauncher<BankingParticipant>(BankingParticipant.class, TEST_FILE);
-		
-//		final ParticipantLauncher<CalendarParticipant> pl2 = 
-//			new ParticipantLauncher<CalendarParticipant>(CalendarParticipant.class, TEST_FILE);		
-//		
-//		pl.start();
-//		Thread.sleep(1000);
-//		pl.stop();
-		
-//		pl2.start();
-//		Thread.sleep(1000);
-//		pl2.stop();
+		ptp.startParticipant(ptp.getParticipants().get(0).getUid());
+		Thread.sleep(5000);
+		ptp.stop();
+		Thread.sleep(1000);
 	}
 }

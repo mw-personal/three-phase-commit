@@ -40,7 +40,7 @@ public class TransactionManager<P extends Participant<? extends Request>> {
 		this.inbox = new ServerSocket(port);
 	}
 	
-	public void initParticipants(){
+	public void initParticipants() {
 		launcher.start();
 	}
 	

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 import java.util.HashMap;
 
 import org.json.JSONException;
@@ -14,6 +13,7 @@ import transactionProtocol.*;
 
 public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 	
+	private boolean started;
 	private Map<String, P> participantMap;
 	private Map<String, Thread> participantThreads;
 	private List<String> failedParticipants;
@@ -29,23 +29,38 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 		this.participantThreads = new HashMap<String, Thread>();
 		this.failedParticipants = new ArrayList<String>();
 
+		
 		for (P p : peeps) {
 			this.participantMap.put(p.getUid(), p);
 			this.participantThreads
 					.put(p.getUid(), new ParticipantThread<P>(p));
 		}
+		this.started = false;
 	}
 	
-	/**
-	 * Start RunnableParticipant threads
-	 */
 	public void start() {
-		for(Thread t : this.participantThreads.values()) { 
-			t.start();
+		if (this.started) {
+			throw new IllegalStateException();
 		}
+		
+		for(Thread t : this.participantThreads.values()) { 
+			if (!t.isAlive())
+				t.start();
+		}
+		this.started = true;
 	}
 	
 	public boolean startParticipant(String uid) {
+		Thread t = this.participantThreads.get(uid);
+		if (t != null) {
+			if (t.isAlive()) {
+				return false;
+			} else {
+				t.start();
+				return true;
+			}
+		}
+		
 		P participant = this.participantMap.get(uid);
 		if (participant == null) {
 			return false;
@@ -73,30 +88,18 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 	public List<String> getFailedParticipants() {
 		return this.failedParticipants;
 	}
-	
-//	public HashMap<String, Future> getThreads(){
-//		return threads;
-//	}
-	
+		
 	public List<P> getParticipants(){
 		return new ArrayList<P>(this.participantMap.values());
 	}
 	
-	/*
-	public void start() {
-		for (final P p : this.peeps) {
-			this.executorService.submit(new Runnable() {
-				public void run() {
-					System.out.println("Thread " + Thread.currentThread().getId() + 
-							":\n" + p + "\n====================");
-				}
-			});
-		}
-	}*/
-	
-	
 	public void stop() {
-		this.executorService.shutdownNow();
+		if (!this.started) {
+			throw new IllegalStateException();
+		}
+		
+		for(Thread t : this.participantThreads.values()) { 
+			t.interrupt();
+		}
 	}
-
 }

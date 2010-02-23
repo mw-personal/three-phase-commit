@@ -1,12 +1,6 @@
 package transactionProtocol;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +8,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import transactionProtocol.Message.MessageType;
 
 import logger.Logger;
 import logger.TransactionLogger;
@@ -47,30 +44,6 @@ public abstract class Participant<R extends Request> {
 	private Protocol commitProtocol;
 	private Protocol terminationProtocol;
 //	private Protocol electionProtocol;
-
-//	public Participant(String uid, InetAddress ipAddress, int port,
-//			String logFile) throws IOException {
-//		this(uid, new InetSocketAddress(ipAddress, port), logFile,
-//				new HashMap<String, InetSocketAddress>());
-//	}
-//
-//	public Participant(String uid, InetAddress ipAddress, int port,
-//			String logFile, String configFile) throws IOException {
-//		this(uid, new InetSocketAddress(ipAddress, port), logFile,
-//				createAddressBook(configFile));
-//	}
-//
-//	public Participant(String uid, InetAddress ipAddress, int port,
-//			String logFile, Map<String, InetSocketAddress> addressBook)
-//			throws IOException {
-//		this(
-//				uid,
-//				new InetSocketAddress(ipAddress, port),
-//				logFile,
-//				(addressBook == null) ? new HashMap<String, InetSocketAddress>()
-//						: addressBook);
-//	}
-
 	
 	public Participant(String uid, int ranking, String defaultVote,
 			InetSocketAddress address, InetSocketAddress heartAddress,
@@ -86,6 +59,10 @@ public abstract class Participant<R extends Request> {
 		this.address = address;
 		this.addressBook = (addressBook == null) ? new HashMap<String, InetSocketAddress>()
 				: addressBook;
+		if (this.addressBook.containsKey(this.getUid())) {
+			this.addressBook.remove(this.getUid());
+		}
+		
 		this.heartAddress = heartAddress;
 //		this.heartBook = (heartBook == null) ? new HashMap<String, InetSocketAddress>()
 //				: heartBook;
@@ -110,27 +87,6 @@ public abstract class Participant<R extends Request> {
 		return sb.toString();
 	}
 	
-//	public Participant(String uid, InetSocketAddress address, String logFile)
-//			throws IOException {
-//		this(uid, address, logFile, new HashMap<String, InetSocketAddress>());
-//	}
-//
-//	public Participant(String uid, InetSocketAddress address, String logFile,
-//			String configFile) throws IOException {
-//		this(uid, address, logFile, createAddressBook(configFile));
-//	}
-//
-//	public Participant(String uid, InetSocketAddress address, String logFile,
-//			Map<String, InetSocketAddress> addressBook) throws IOException {
-//		this.uid = uid;
-//		this.isCoordinator = false;
-//		this.logger = new TransactionLog(logFile, true);
-//		this.addressBook = (addressBook == null) ? new HashMap<String, InetSocketAddress>()
-//				: addressBook;
-//		this.address = address;
-//		this.inbox = new ServerSocket(this.address.getPort());
-//	}
-
 	//
 	// general participant methods
 	//
@@ -158,12 +114,18 @@ public abstract class Participant<R extends Request> {
 	public void setCoordinator(boolean isCoordinator) {
 		this.isCoordinator = isCoordinator;
 	}
-
+	
+	public void setAddressBook(Map<String, InetSocketAddress> addressBook) {
+		this.addressBook = addressBook;
+		if (this.addressBook.containsKey(this.getUid())) {
+			this.addressBook.remove(this.getUid());
+		}
+	}
+	
 	//
 	// methods for changing state
 	//
 	
-	//public abstract void start();
 	public abstract void abort();
 	public abstract Vote castVote(R r);
 	public abstract void commit();
@@ -178,7 +140,6 @@ public abstract class Participant<R extends Request> {
 
 	public void setCommitProtocol(Protocol p) {
 		this.commitProtocol = p;
-		this.commitProtocol.start(this);
 	}
 
 	public Protocol getTerminationProtocol() {
@@ -188,63 +149,44 @@ public abstract class Participant<R extends Request> {
 	public void setTerminationProtocol(Protocol p) {
 		this.terminationProtocol = p;
 	}
+	
+	public void startCommitProtocol() {
+		if (this.commitProtocol == null)
+			throw new IllegalStateException("Participant.startCommitProtocol: no commit protocol found!");
+		this.commitProtocol.start(this);
+	}
+	
+	public void startTerminationProtocol() {
+		if (this.terminationProtocol == null)
+			throw new IllegalStateException("Participant.startTerminationProtocol: no termination protocol found!");
+		this.terminationProtocol.start(this);
+	}
 
 	//
 	// methods for sending/receiving data
 	//
 
-	public void setAddressBook(Map<String, InetSocketAddress> addressBook) {
-		this.addressBook = addressBook;
-	}
-
-	public void broadcastMessage(Message m) {
-		for (InetSocketAddress isa : this.addressBook.values()) {
-			sendMessage(isa, m);
+	public void broadcastMessage(MessageType messageType, R request) {
+		for (Entry<String, InetSocketAddress> e : this.addressBook.entrySet()) {
+			sendMessage(e.getKey(), e.getValue(), messageType, request);
 		}
 	}
 
-	public void sendMessage(InetSocketAddress address, Message m) {
+	public void sendMessage(String uid, MessageType messageType, R request) {
+		sendMessage(uid, this.addressBook.get(uid), messageType, request);
+	}
+	
+	public void sendMessage(String uid, InetSocketAddress address, MessageType messageType, R request) {
 		try {
 			Socket server = new Socket(address.getAddress(), address.getPort());
-			Message.writeObject(server.getOutputStream(), m);
+			Message.writeObject(server.getOutputStream(), 
+					new Message(messageType, getUid(), uid, System.currentTimeMillis(), request));
 			server.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-//	//TODO: add to interface if we need this.
-//	public Map<String, Message> receiveFromAll(int timeout, Protocol timeoutProtocol) {
-//		// we don't want to receive anything from ourselves.
-//		// TODO: this is only necessary if we exist in our own addressBook
-//		Set<String> keys = this.addressBook.keySet();
-//		keys.remove(this.uid);
-//
-//		Map<String, Message> result = new HashMap<String, Message>();
-//
-//		// set a timeout
-//		try {
-//			this.inbox.setSoTimeout(timeout);
-//			for (String recipient : keys) {
-//				try {
-//					Socket client = this.inbox.accept();
-//					BufferedReader in = new BufferedReader(
-//							new InputStreamReader(client.getInputStream()));
-//
-//					result.put(recipient, Message.valueOf(in.readLine()));
-//					in.close();
-//					client.close();
-//				} catch (SocketTimeoutException e) {
-//					timeoutProtocol.start(this);
-//				}
-//			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//
-//		return result;
-//	}
-
 	public Message receiveMessage(int timeout) throws MessageTimeoutException {
 		Message m = null;
 		
@@ -253,40 +195,15 @@ public abstract class Participant<R extends Request> {
 			Socket client = this.inbox.accept();
 			m = Message.readObject(client.getInputStream());
 			client.close();
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (SocketTimeoutException e) {
+			throw new MessageTimeoutException();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
 		return m;
 	}
-
-	//
-	// private methods
-	//
-
-//	private static Map<String, InetSocketAddress> createAddressBook(
-//			String configFile) throws IOException {
-//		HashMap<String, InetSocketAddress> result = new HashMap<String, InetSocketAddress>();
-//		BufferedReader f = new BufferedReader(new FileReader(configFile));
-//
-//		String s = f.readLine();
-//		while (s != null) {
-//			String[] is = s.split("::");
-//			result.put(is[0], new InetSocketAddress(is[1], Integer
-//					.parseInt(is[2])));
-//			s = f.readLine();
-//		}
-//
-//		f.close();
-//
-//		return result;
-//	}
 
 }
