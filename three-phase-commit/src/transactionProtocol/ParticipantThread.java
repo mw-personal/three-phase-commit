@@ -3,9 +3,11 @@ package transactionProtocol;
 public class ParticipantThread<P extends Participant<? extends Request>> extends Thread {
 
 	private P participant;
+	private String pointToFail;
 	
-	public ParticipantThread (P participant) {
+	public ParticipantThread (P participant, String pointToFail) {
 		this.participant = participant;
+		this.pointToFail = pointToFail;
 	}
 
 	/* (non-Javadoc)
@@ -15,6 +17,19 @@ public class ParticipantThread<P extends Participant<? extends Request>> extends
 	public void interrupt() {
 		// TODO Auto-generated method stub
 		super.interrupt();
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Thread#isInterrupted()
+	 */
+	@Override
+	public boolean isInterrupted() {
+		// TODO Auto-generated method stub
+		return super.isInterrupted();
+	}
+	
+	public boolean isInterrupted(String s) {
+		return (s == null) ? isInterrupted() : s.equals(this.pointToFail);
 	}
 
 	/* (non-Javadoc)

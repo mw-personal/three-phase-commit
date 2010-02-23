@@ -23,8 +23,10 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 	}
 	
 	public ParticipantThreadPool(Class<P> type, File configFile) throws IOException, JSONException {
-		List<P> peeps = ParticipantConfiguration
-				.<P>readParticipantConfiguration(type, configFile);
+		ParticipantConfiguration<P> pc = new ParticipantConfiguration<P>(type, configFile);
+		
+		List<P> peeps = pc.getParticipants();
+		Map<String, String> pointsToFail = pc.getPointsToFail();
 		this.participantMap = new HashMap<String, P>();
 		this.participantThreads = new HashMap<String, Thread>();
 		this.failedParticipants = new ArrayList<String>();
@@ -33,7 +35,7 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 		for (P p : peeps) {
 			this.participantMap.put(p.getUid(), p);
 			this.participantThreads
-					.put(p.getUid(), new ParticipantThread<P>(p));
+					.put(p.getUid(), new ParticipantThread<P>(p, pointsToFail.get(p.getUid())));
 		}
 		this.started = false;
 	}
@@ -66,7 +68,7 @@ public class ParticipantThreadPool<P extends Participant<? extends Request>> {
 			return false;
 		}
 				
-		ParticipantThread<P> pt = new ParticipantThread<P>(participant);
+		ParticipantThread<P> pt = new ParticipantThread<P>(participant, "omg");
 		this.failedParticipants.remove(uid);
 		this.participantThreads.put(uid, pt);
 		pt.start();

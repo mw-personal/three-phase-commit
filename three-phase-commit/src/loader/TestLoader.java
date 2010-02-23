@@ -8,6 +8,7 @@ import org.json.JSONException;
 import transactionProtocol.Message;
 import transactionProtocol.MessageTimeoutException;
 import transactionProtocol.Participant;
+import transactionProtocol.ParticipantThread;
 import transactionProtocol.Protocol;
 import transactionProtocol.Request;
 import transactionProtocol.Message.MessageType;
@@ -22,7 +23,7 @@ public class TestLoader {
 	public static void main(String[] args) throws IOException, JSONException, InterruptedException {
 		final String configFile = "testparticipantconfig.txt";
 		
-		ParticipantConfiguration.generateParticipantConfigurationFile(4, 8090, configFile);
+		//ParticipantConfiguration.generateParticipantConfigurationFile(4, 8090, configFile);
 			
 		ParticipantThreadPool<BankingParticipant> ptp = 
 			new ParticipantThreadPool<BankingParticipant>(BankingParticipant.class, configFile);
@@ -37,7 +38,7 @@ public class TestLoader {
 						// wait to receive a message from all participants
 						for (int i = 0; i < 3; i++) {
 							try {
-								if (Thread.currentThread().isInterrupted()) {
+								if (((ParticipantThread) Thread.currentThread()).isInterrupted("omg")) {
 									throw new InterruptedException();
 								}
 								Message m = p.receiveMessage(1000);
@@ -58,8 +59,8 @@ public class TestLoader {
 		Thread.sleep(5000);
 		Thread.sleep(5000);
 		
-		ptp.startParticipant(ptp.getParticipants().get(0).getUid());
-		Thread.sleep(5000);
+		//ptp.startParticipant(ptp.getParticipants().get(0).getUid());
+		//Thread.sleep(5000);
 		ptp.stop();
 		Thread.sleep(1000);
 	}
