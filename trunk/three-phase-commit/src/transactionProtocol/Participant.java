@@ -1,6 +1,10 @@
 package transactionProtocol;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,6 +26,7 @@ public abstract class Participant<R extends Request> {
 	private boolean isCoordinator;
 	private Logger logger;
 	private int ranking; // used for election protocol
+	private Participant<R> coordinator;
 	// TODO: we need a better way of handling this
 	//       it is likely each participant will need
 	//       somesort of innerstate.  might be easier
@@ -187,13 +192,13 @@ public abstract class Participant<R extends Request> {
 		}
 	}
 	
-	public Message receiveMessage(int timeout) throws MessageTimeoutException {
-		Message m = null;
+	public Message<R> receiveMessage(int timeout) throws MessageTimeoutException {
+		Message<R> m = null;
 		
 		try {
 			this.inbox.setSoTimeout(timeout);
 			Socket client = this.inbox.accept();
-			m = Message.readObject(client.getInputStream());
+			m = readObject(client.getInputStream());
 			client.close();
 		} catch (SocketTimeoutException e) {
 			throw new MessageTimeoutException();
@@ -204,6 +209,30 @@ public abstract class Participant<R extends Request> {
 		}
 		
 		return m;
+	}
+	
+	private void writeObject(OutputStream stream, Message m) throws IOException {
+		ObjectOutputStream oos = 
+			new ObjectOutputStream(stream);
+		oos.writeObject(m);
+		oos.close();
+	}
+	
+	private Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
+		ObjectInputStream ois =
+			new ObjectInputStream(stream);
+		Object obj = ois.readObject();
+		ois.close();
+		
+		if(obj != null && obj instanceof Message) {
+			return (Message<R>) obj;
+		} else {
+			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
+		}
+	}
+	
+	public Participant<R> getCoordintar(){
+		return coordinator;
 	}
 
 }

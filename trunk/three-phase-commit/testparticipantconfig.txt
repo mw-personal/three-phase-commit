@@ -1,94 +1,46 @@
 {"participants": [
     {
         "default-vote": "?",
-<<<<<<< .mine
         "heartbeat-ip": "128.62.154.128",
-=======
-        "heartbeat-ip": "128.62.213.39",
->>>>>>> .r28
         "heartbeat-port": 8091,
-<<<<<<< .mine
         "inbox-ip": "128.62.154.128",
-=======
-        "inbox-ip": "128.62.213.39",
->>>>>>> .r28
         "inbox-port": 8090,
         "log-file": "logs/mylogfile0.txt",
         "point-to-fail": "",
         "ranking": -1,
-<<<<<<< .mine
-        "uid": "35486344-ee9c-4165-9ead-8a9be8c8d94c"
-=======
-        "uid": "41c8995c-7cc2-44e2-9863-43e4f8f8c2e8"
->>>>>>> .r28
+        "uid": "aec68c1a-3b30-4a0a-9124-0fc3f0c616f6"
     },
     {
         "default-vote": "?",
-<<<<<<< .mine
         "heartbeat-ip": "128.62.154.128",
-=======
-        "heartbeat-ip": "128.62.213.39",
->>>>>>> .r28
         "heartbeat-port": 8093,
-<<<<<<< .mine
         "inbox-ip": "128.62.154.128",
-=======
-        "inbox-ip": "128.62.213.39",
->>>>>>> .r28
         "inbox-port": 8092,
         "log-file": "logs/mylogfile1.txt",
         "point-to-fail": "",
         "ranking": -1,
-<<<<<<< .mine
-        "uid": "6406685b-dd14-45f0-a534-69a8be706dbb"
-=======
-        "uid": "5f290f56-31ab-4aab-b4c5-065f1e0343cc"
->>>>>>> .r28
+        "uid": "5ed036f4-43df-4acb-ad54-f5fbc2833664"
     },
     {
         "default-vote": "?",
-<<<<<<< .mine
         "heartbeat-ip": "128.62.154.128",
-=======
-        "heartbeat-ip": "128.62.213.39",
->>>>>>> .r28
         "heartbeat-port": 8095,
-<<<<<<< .mine
         "inbox-ip": "128.62.154.128",
-=======
-        "inbox-ip": "128.62.213.39",
->>>>>>> .r28
         "inbox-port": 8094,
         "log-file": "logs/mylogfile2.txt",
         "point-to-fail": "",
         "ranking": -1,
-<<<<<<< .mine
-        "uid": "9a5bd9ea-e752-4acc-94db-669eb550beb3"
-=======
-        "uid": "703b4fa0-6f45-4f2e-ab61-e9c20ca96ce6"
->>>>>>> .r28
+        "uid": "80b2947a-d736-4525-a9cc-339460a1193f"
     },
     {
         "default-vote": "?",
-<<<<<<< .mine
         "heartbeat-ip": "128.62.154.128",
-=======
-        "heartbeat-ip": "128.62.213.39",
->>>>>>> .r28
         "heartbeat-port": 8097,
-<<<<<<< .mine
         "inbox-ip": "128.62.154.128",
-=======
-        "inbox-ip": "128.62.213.39",
->>>>>>> .r28
         "inbox-port": 8096,
         "log-file": "logs/mylogfile3.txt",
         "point-to-fail": "",
         "ranking": -1,
-<<<<<<< .mine
-        "uid": "1ac3d86f-6852-4b98-97a0-cdefeae76ecc"
-=======
-        "uid": "e37975ea-a80e-4788-895e-26ebe7eccc15"
->>>>>>> .r28
+        "uid": "f65c36d4-18f1-416f-8d6c-8a1081f94767"
     }
 ]}

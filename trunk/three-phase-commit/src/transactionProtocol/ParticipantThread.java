@@ -1,6 +1,6 @@
 package transactionProtocol;
 
-public class ParticipantThread<P extends Participant<? extends Request>> extends Thread {
+public class ParticipantThread<R extends Request, P extends Participant<R>> extends Thread {
 
 	private P participant;
 	private String pointToFail;
@@ -48,11 +48,14 @@ public class ParticipantThread<P extends Participant<? extends Request>> extends
 	public void run() {
 		// TODO Auto-generated method stub
 		super.run();
+		
+		// TODO handle wake up (from failure).  Perhaps need a wake up protocol
+		// something like participant.startWakeUpProtocol();
+		// if not waking up from failure then do participant.startElectionProtocol();
 		participant.startCommitProtocol();
+		
 	}
 	
-	
-
 	
 	
 }

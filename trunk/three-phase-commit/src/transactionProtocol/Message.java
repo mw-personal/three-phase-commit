@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 
-public class Message implements Serializable {
+public class Message<R extends Request> implements Serializable {
 	
 	private static final long serialVersionUID = -2723845472583508382L;
 
@@ -20,16 +20,17 @@ public class Message implements Serializable {
 		COMMIT,
 		NO,
 		ABORT,
-		INITIATE }
+		INITIATE,
+		}
 	
 	private MessageType type;
 	private String source;
 	private String dest;
 	private long timestamp;
-	private Request request;
+	private R request;
 	//private Class<? extends Request> requestType;
 	
-	public Message(MessageType type, String source, String dest, long timestamp, Request r){
+	public Message(MessageType type, String source, String dest, long timestamp, R r){
 		this.type = type;
 		this.source = source;
 		this.dest = dest;
@@ -58,7 +59,7 @@ public class Message implements Serializable {
 		return timestamp;
 	}
 
-	public Request getRequest() {
+	public R getRequest() {
 		return request;
 	}
 	
@@ -82,14 +83,14 @@ public class Message implements Serializable {
 		oos.close();
 	}
 	
-	public static Message readObject(InputStream stream) throws IOException, ClassNotFoundException {
+	public Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
 		ObjectInputStream ois =
 			new ObjectInputStream(stream);
 		Object obj = ois.readObject();
 		ois.close();
 		
 		if(obj != null && obj instanceof Message) {
-			return (Message) obj;
+			return (Message<R>) obj;
 		} else {
 			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
 		}
