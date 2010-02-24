@@ -1,7 +1,6 @@
 package loader;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.json.JSONException;
 
@@ -12,24 +11,21 @@ import transactionProtocol.ParticipantThread;
 import transactionProtocol.Protocol;
 import transactionProtocol.Request;
 import transactionProtocol.Message.MessageType;
-
 import applications.banking.BankingParticipant;
-import applications.banking.BankingRequest;
-import applications.banking.BankingRequest.BankingRequestType;
-import applications.calendar.CalendarParticipant;
 
 public class TestLoader {
 
 	public static void main(String[] args) throws IOException, JSONException, InterruptedException {
 		final String configFile = "testparticipantconfig.txt";
 		
-		//ParticipantConfiguration.generateParticipantConfigurationFile(4, 8090, configFile);
+		ParticipantConfiguration.generateParticipantConfigurationFile(4, 8090, configFile);
 			
 		ParticipantThreadPool<BankingParticipant> ptp = 
 			new ParticipantThreadPool<BankingParticipant>(BankingParticipant.class, configFile);
 		
 		for (BankingParticipant bp : ptp.getParticipants()) {
 			bp.setCommitProtocol(new Protocol() {
+				@SuppressWarnings("unchecked")
 				public void start(Participant<? extends Request> p) {
 					try {
 						// send a broadcast to all participants
@@ -38,7 +34,7 @@ public class TestLoader {
 						// wait to receive a message from all participants
 						for (int i = 0; i < 3; i++) {
 							try {
-								if (((ParticipantThread) Thread.currentThread()).isInterrupted("omg")) {
+								if (((ParticipantThread<BankingParticipant>) Thread.currentThread()).isInterrupted("omg")) {
 									throw new InterruptedException();
 								}
 								Message m = p.receiveMessage(1000);
@@ -53,6 +49,15 @@ public class TestLoader {
 				}
 			});
 		}
+		
+//		InetSocketAddress coordinator;
+//		List<InetSocketAddress> addressBook;
+//		
+//		ThreePhaseCommitTransactionManager tpc = 
+//			new ThreePhaseCommitTransactionManager(coordinator, addressBook);
+//		
+//		tpc.request(myRequest);
+		
 		
 		ptp.start();
 		ptp.stopParticipant(ptp.getParticipants().get(0).getUid());

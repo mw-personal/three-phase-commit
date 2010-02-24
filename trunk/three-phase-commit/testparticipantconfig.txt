@@ -1,46 +1,46 @@
 {"participants": [
     {
         "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
+        "heartbeat-ip": "128.62.213.39",
         "heartbeat-port": 8091,
-        "inbox-ip": "192.168.2.5",
+        "inbox-ip": "128.62.213.39",
         "inbox-port": 8090,
         "log-file": "logs/mylogfile0.txt",
         "point-to-fail": "",
         "ranking": -1,
-        "uid": "36a0e32b-c0e3-4cb9-8ab3-fa6d5768e891"
+        "uid": "41c8995c-7cc2-44e2-9863-43e4f8f8c2e8"
     },
     {
         "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
+        "heartbeat-ip": "128.62.213.39",
         "heartbeat-port": 8093,
-        "inbox-ip": "192.168.2.5",
+        "inbox-ip": "128.62.213.39",
         "inbox-port": 8092,
         "log-file": "logs/mylogfile1.txt",
         "point-to-fail": "",
         "ranking": -1,
-        "uid": "cd1a70ed-5753-49fe-b628-10fba242fd6a"
+        "uid": "5f290f56-31ab-4aab-b4c5-065f1e0343cc"
     },
     {
         "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
+        "heartbeat-ip": "128.62.213.39",
         "heartbeat-port": 8095,
-        "inbox-ip": "192.168.2.5",
+        "inbox-ip": "128.62.213.39",
         "inbox-port": 8094,
         "log-file": "logs/mylogfile2.txt",
-        "point-to-fail": "omg",
+        "point-to-fail": "",
         "ranking": -1,
-        "uid": "7fdb8e40-a2d9-4159-b120-943e7bce4d08"
+        "uid": "703b4fa0-6f45-4f2e-ab61-e9c20ca96ce6"
     },
     {
         "default-vote": "?",
-        "heartbeat-ip": "192.168.2.5",
+        "heartbeat-ip": "128.62.213.39",
         "heartbeat-port": 8097,
-        "inbox-ip": "192.168.2.5",
+        "inbox-ip": "128.62.213.39",
         "inbox-port": 8096,
         "log-file": "logs/mylogfile3.txt",
         "point-to-fail": "",
         "ranking": -1,
-        "uid": "d57a597a-be09-4154-b017-9f3810d3a4ea"
+        "uid": "e37975ea-a80e-4788-895e-26ebe7eccc15"
     }
 ]}
