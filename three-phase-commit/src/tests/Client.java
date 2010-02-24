@@ -4,13 +4,13 @@ import transactionProtocol.Participant;
 import transactionProtocol.Request;
 import transactionProtocol.TransactionManager;
 
-public class Client implements Runnable {
+public class Client<R extends Request, P extends Participant<R>> implements Runnable {
 
-	private TransactionManager<? extends Participant<? extends Request>> manager;
-	private Request request;
+	private TransactionManager<R,P> manager;
+	private R request;
 	private long clientId;
 	
-	public Client(TransactionManager<? extends Participant<? extends Request>> tm, Request request, long id){
+	public Client(TransactionManager<R,P> tm, R request, long id){
 		this.manager = tm;
 		this.request = request;
 		this.clientId = id;

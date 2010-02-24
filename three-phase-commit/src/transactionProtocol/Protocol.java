@@ -1,5 +1,5 @@
 package transactionProtocol;
 
-public interface Protocol {
-	public void start(Participant<? extends Request> p);
+public interface Protocol<R extends Request> {
+	public void start(Participant<R> p);
 }

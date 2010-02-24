@@ -24,7 +24,8 @@ import applications.banking.BankingParticipant;
  *
  * @param <P>
  */
-public abstract class TransactionManager<P extends Participant<? extends Request>> implements TransactionProtocol{
+public abstract class TransactionManager<R extends Request, 
+	P extends Participant<R>> implements TransactionProtocol{
 	
 	public static final String MANAGER = "MANAGER";
 	
@@ -57,14 +58,15 @@ public abstract class TransactionManager<P extends Participant<? extends Request
 	 * API for outside world to send a request to the DS.
 	 * @param request
 	 */
-	public synchronized void sendRequest(Request request){
+	public synchronized void sendRequest(R request){
 		try{
 			List<P> participants = launcher.getParticipants();
-			Message init;
+			Message<R> init;
 			Socket server;
+			
 			// Send Initialize message to each particpant
 			for(final P p : participants){
-				init = new Message(Message.MessageType.INITIATE, this.MANAGER, p.getUid(), System.currentTimeMillis(), request);
+				init = new Message<R>(Message.MessageType.INITIATE, this.MANAGER, p.getUid(), System.currentTimeMillis(), request);
 				server = new Socket(p.getAddress().getAddress(), p.getAddress().getPort());
 				Message.writeObject(server.getOutputStream(), init);
 			}
@@ -72,6 +74,8 @@ public abstract class TransactionManager<P extends Participant<? extends Request
 			e.printStackTrace();
 		}
 	}
+	
+	
 	
 //	/**
 //	 * Send reply back to outside world
