@@ -10,7 +10,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -34,7 +37,7 @@ public abstract class Participant<R extends Request> {
 	// TODO: can different protocols put participants in
 	//       different states? how do we genercise that?
 	private String defaultVote; 
-	
+	private List<String> upList;
 
 	// sockets for message passing
 	private Map<String, InetSocketAddress> addressBook;
@@ -73,6 +76,13 @@ public abstract class Participant<R extends Request> {
 //				: heartBook;
 		
 		this.inbox = new ServerSocket(this.address.getPort());
+		
+		// Initialize "up list"
+		upList = new ArrayList<String>();
+		for(String id : addressBook.keySet()){
+			if(id != uid)
+				upList.add(id);
+		}
 	}
 	
 	@Override
@@ -172,8 +182,9 @@ public abstract class Participant<R extends Request> {
 	//
 
 	public void broadcastMessage(MessageType messageType, R request) {
-		for (Entry<String, InetSocketAddress> e : this.addressBook.entrySet()) {
-			sendMessage(e.getKey(), e.getValue(), messageType, request);
+		
+		for (String uid : this.upList) {
+			sendMessage(uid, addressBook.get(uid), messageType, request);
 		}
 	}
 
@@ -233,6 +244,10 @@ public abstract class Participant<R extends Request> {
 	
 	public Participant<R> getCoordintar(){
 		return coordinator;
+	}
+	
+	public List<String> getUpList(){
+		return upList;
 	}
 
 }
