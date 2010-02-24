@@ -17,7 +17,7 @@ public class TransactionManagerFactory {
 	private HashMap<Class<? extends Participant<? extends Request>>, TransactionManager<? extends Participant<? extends Request>>> managers;
 	
 	private TransactionManagerFactory(){
-		
+		managers = new HashMap<Class<? extends Participant<? extends Request>>, TransactionManager<? extends Participant<? extends Request>>>();
 	}
 	
 	public static TransactionManagerFactory getTransactionManagerFactory(){
@@ -26,7 +26,7 @@ public class TransactionManagerFactory {
 	
 	public <P extends Participant<? extends Request>> TransactionManager<P> getTransactionManager(Class<P> type, String config, int port){
 		
-		TransactionManager<P> manager;
+		TransactionManager<P> manager = null;
 		if( managers.get(type) == null){
 			try {
 				manager = new TransactionManagerImp<P>(type, config, port);
@@ -40,7 +40,7 @@ public class TransactionManagerFactory {
 			}
 		}
 		
-		return null;
+		return manager;
 		 
 	}
 	
