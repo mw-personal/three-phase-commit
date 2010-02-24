@@ -1,5 +1,6 @@
-package loader;
+package tests;
 
+import loader.ParticipantConfiguration;
 import applications.banking.BankingParticipant;
 import transactionProtocol.TransactionManagerTwo;
 import transactionProtocol.TransactionManagerTwoFactory;
