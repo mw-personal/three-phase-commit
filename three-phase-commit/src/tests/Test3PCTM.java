@@ -1,8 +1,10 @@
-package threePhaseCommit;
+package tests;
 
 import java.io.IOException;
 
 import org.json.JSONException;
+
+import threePhaseCommit.ThreePhaseCommitTransactionManager;
 
 import applications.banking.BankingParticipant;
 

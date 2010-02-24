@@ -1,6 +1,9 @@
-package loader;
+package tests;
 
 import java.io.IOException;
+
+import loader.ParticipantConfiguration;
+import loader.ParticipantThreadPool;
 
 import org.json.JSONException;
 
