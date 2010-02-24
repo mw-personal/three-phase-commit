@@ -39,14 +39,9 @@ public abstract class Participant<R extends Request> {
 	private Map<String, InetSocketAddress> addressBook;
 	private InetSocketAddress address;
 	private ServerSocket inbox;
-
-	// handles for protocols
-	private Protocol commitProtocol;
-	private Protocol terminationProtocol;
-//	private Protocol electionProtocol;
 	
 	public Participant(String uid, int ranking, String defaultVote,
-			InetSocketAddress address, InetSocketAddress heartAddress,
+			InetSocketAddress address,
 			Map<String, InetSocketAddress> addressBook, String logFile)
 			throws IOException {
 		this.uid = uid;
@@ -65,10 +60,10 @@ public abstract class Participant<R extends Request> {
 		this.inbox = new ServerSocket(this.address.getPort());
 		
 		// Initialize "up list"
-		upList = new ArrayList<String>();
+		this.upList = new ArrayList<String>();
 		for(String id : addressBook.keySet()){
-			if(id != uid)
-				upList.add(id);
+			if(id != this.uid)
+				this.upList.add(id);
 		}
 	}
 	
@@ -130,45 +125,14 @@ public abstract class Participant<R extends Request> {
 	public abstract void abort();
 	public abstract Vote castVote(R r);
 	public abstract void commit();
-
-	//
-	// methods for getting/setting protocol handles
-	//
-
-	public Protocol getCommitProtocol() {
-		return this.commitProtocol;
-	}
-
-	public void setCommitProtocol(Protocol p) {
-		this.commitProtocol = p;
-	}
-
-	public Protocol getTerminationProtocol() {
-		return this.terminationProtocol;
-	}
-
-	public void setTerminationProtocol(Protocol p) {
-		this.terminationProtocol = p;
-	}
-	
-	public void startCommitProtocol() {
-		if (this.commitProtocol == null)
-			throw new IllegalStateException("Participant.startCommitProtocol: no commit protocol found!");
-		this.commitProtocol.start(this);
-	}
-	
-	public void startTerminationProtocol() {
-		if (this.terminationProtocol == null)
-			throw new IllegalStateException("Participant.startTerminationProtocol: no termination protocol found!");
-		this.terminationProtocol.start(this);
-	}
+	public abstract void startCommitProtocol();
+	public abstract void startTerminationProtocol();
 
 	//
 	// methods for sending/receiving data
 	//
 
 	public void broadcastMessage(MessageType messageType, R request) {
-		
 		for (String uid : this.upList) {
 			sendMessage(uid, addressBook.get(uid), messageType, request);
 		}
