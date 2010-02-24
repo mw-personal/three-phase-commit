@@ -24,7 +24,7 @@ import applications.banking.BankingParticipant;
  *
  * @param <P>
  */
-public abstract class TransactionManager<P extends Participant<? extends Request>> {
+public abstract class TransactionManager<P extends Participant<? extends Request>> implements TransactionProtocol{
 	
 	public static final String MANAGER = "MANAGER";
 	
