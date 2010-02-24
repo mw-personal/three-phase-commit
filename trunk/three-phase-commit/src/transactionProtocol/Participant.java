@@ -8,19 +8,15 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import transactionProtocol.Message.MessageType;
 
 import logger.Logger;
 import logger.TransactionLogger;
+import transactionProtocol.Message.MessageType;
 
 public abstract class Participant<R extends Request> {
 
@@ -43,10 +39,6 @@ public abstract class Participant<R extends Request> {
 	private Map<String, InetSocketAddress> addressBook;
 	private InetSocketAddress address;
 	private ServerSocket inbox;
-	
-	// sockets for heartbeat monitoring
-//	private Map<String, InetSocketAddress> heartBook;
-	private InetSocketAddress heartAddress;
 
 	// handles for protocols
 	private Protocol commitProtocol;
@@ -55,8 +47,7 @@ public abstract class Participant<R extends Request> {
 	
 	public Participant(String uid, int ranking, String defaultVote,
 			InetSocketAddress address, InetSocketAddress heartAddress,
-			Map<String, InetSocketAddress> addressBook,
-			Map<String, InetSocketAddress> heartBook, String logFile)
+			Map<String, InetSocketAddress> addressBook, String logFile)
 			throws IOException {
 		this.uid = uid;
 		this.isCoordinator = false;
@@ -70,10 +61,6 @@ public abstract class Participant<R extends Request> {
 		if (this.addressBook.containsKey(this.getUid())) {
 			this.addressBook.remove(this.getUid());
 		}
-		
-		this.heartAddress = heartAddress;
-//		this.heartBook = (heartBook == null) ? new HashMap<String, InetSocketAddress>()
-//				: heartBook;
 		
 		this.inbox = new ServerSocket(this.address.getPort());
 		
@@ -96,7 +83,6 @@ public abstract class Participant<R extends Request> {
 		sb.append("\n  ranking=" + this.ranking);
 		sb.append("\n  defaultVote=" + this.defaultVote);
 		sb.append("\n  address=" + this.address);
-		sb.append("\n  heartAddress=" + this.heartAddress);
 		sb.append("\n}");
 		
 		return sb.toString();
