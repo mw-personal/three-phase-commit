@@ -1,59 +1,37 @@
 package threePhaseCommit;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.util.List;
+
+import org.json.JSONException;
+
+import applications.banking.BankingParticipant;
 
 import transactionProtocol.Message;
 import transactionProtocol.MessageTimeoutException;
 import transactionProtocol.Participant;
+import transactionProtocol.ParticipantThread;
 import transactionProtocol.Protocol;
-import transactionProtocol.TransactionProtocol;
+import transactionProtocol.Request;
+import transactionProtocol.TransactionManager;
 import transactionProtocol.Vote;
+import transactionProtocol.Message.MessageType;
 
-public class ThreePhaseCommitProtocol implements TransactionProtocol {
+public class ThreePhaseCommitTransactionManager<P extends Participant<? extends Request>>
+		extends TransactionManager<P> {
 
-	protected static final int TIMEOUT = 0;
-
-	public InetSocketAddress coordinator;
-	public List<InetSocketAddress> participants;
-
-	public ThreePhaseCommitProtocol(InetSocketAddress coordinator,
-			List<InetSocketAddress> participants) throws IOException {
-		this.coordinator = coordinator;
-		this.participants = participants;
-		
-		// send each participant the protocol they should execute
-		for (InetSocketAddress isa : this.participants) {
-			Socket s = new Socket(isa.getAddress(), isa.getPort());
-			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-			
-			// send commit protocol
-			oos.writeObject(this.getCommitProtocol());
-
-			// send termination protocol
-			oos.writeObject(this.getTerminationProtocol());
-			
-			oos.close();
-			s.close();
-		}
+	public static int TIMEOUT = 1000;
+	
+	public ThreePhaseCommitTransactionManager(Class<P> type, String config,
+			int port) throws IOException, JSONException {
+		super(type, config, port);
 	}
 
-	public InetSocketAddress getCoordinator() {
-		return this.coordinator;
-	}
-
-	public List<InetSocketAddress> getParticiapnts() {
-		return this.participants;
-	}
-
-	public Protocol getCommitProtocol() {
+	@Override
+	public Protocol getCommitProtocol() {		
 		return new Protocol() {
 			
-			private static final long serialVersionUID = 1L;
-
+			Request r;
+			
 			public void start(Participant<? extends Request> p) {
 				if (p.isCoordinator()) {
 					coordinator(p);
@@ -62,12 +40,12 @@ public class ThreePhaseCommitProtocol implements TransactionProtocol {
 				}
 			}
 
-			protected void coordinator(Participant p) {
+			protected void coordinator(Participant<? extends Request> p) {
 				// write start-3PC to log
 				p.getLog().log("START-3PC");
 
 				// send VOTE-REQ to all participants
-				p.broadcastMessage(Message.VOTE_REQ);
+				p.broadcastMessage(Message.MessageType.VOTE_REQ, null);
 
 				// wait for vote messages from all participants
 				try {
@@ -80,7 +58,7 @@ public class ThreePhaseCommitProtocol implements TransactionProtocol {
 					// TODO: p needs to call p.abort();
 					p.getLog().log("ABORT");
 					// TODO: this can be improved!
-					p.broadcastMessage(Message.ABORT);
+					p.broadcastMessage(Message.MessageType.ABORT, null);
 					return;
 				}
 
@@ -88,7 +66,7 @@ public class ThreePhaseCommitProtocol implements TransactionProtocol {
 				Vote v = p.castVote();
 				if (v == Vote.YES) {
 					// send PRE-COMMIT to all participants
-					p.broadcastMessage(Message.PRE_COMMIT);
+					p.broadcastMessage(Message.MessageType.PRE_COMMIT, null);
 					try {
 						// TODO need to receive ack from all participants
 						p.receiveMessage(TIMEOUT);
@@ -98,18 +76,18 @@ public class ThreePhaseCommitProtocol implements TransactionProtocol {
 
 					// write commit to log
 					p.getLog().log("COMMIT");
-					p.broadcastMessage(Message.COMMIT);
+					p.broadcastMessage(Message.MessageType.COMMIT, null);
 				} else {
 					// TODO: this is a possible error.
 					// TODO: p needs to call p.abort();
 					p.getLog().log("ABORT");
 					// TODO: this can be improved!
-					p.broadcastMessage(Message.ABORT);
+					p.broadcastMessage(Message.MessageType.ABORT, null);
 					return;
 				}
 			}
 
-			protected void participant(Participant p) {
+			protected void participant(Participant<? extends Request> p) {
 				//
 				// wait for VOTE-REQ from coordinator
 				try {
@@ -186,13 +164,10 @@ public class ThreePhaseCommitProtocol implements TransactionProtocol {
 		};
 	}
 
+	@Override
 	public Protocol getTerminationProtocol() {
-		return new Protocol() {
-
-			public void start(Participant p) {
-				// TODO Auto-generated method stub
-
-			}
-		};
+		// TODO Auto-generated method stub
+		return null;
 	}
+
 }
