@@ -56,13 +56,11 @@ public class BankingRequest implements Request {
 		return "{" + type + ":" + accountName + ":" + amount + "}";
 	}
 
-	@Override
 	public InetSocketAddress getAddress() {
 		// TODO Auto-generated method stub
 		return address;
 	}
 
-	@Override
 	public ServerSocket getServer() {
 		// TODO Auto-generated method stub
 		return inbox;

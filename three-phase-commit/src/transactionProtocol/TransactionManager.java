@@ -31,12 +31,12 @@ public abstract class TransactionManager<R extends Request,
 	
 	// private P coordinator;
 	private List<P> addressBook;
-	private ParticipantThreadPool<P> launcher;
+	private ParticipantThreadPool<R,P> launcher;
 	private ServerSocket inbox;
 
 	public TransactionManager(Class<P> type, String config, int port) throws IOException, JSONException {
 		// this.coordinator = // run election protocol(addressBook); 
-		this.launcher = new ParticipantThreadPool<P>(type, config);
+		this.launcher = new ParticipantThreadPool<R,P>(type, config);
 		this.addressBook = this.launcher.getParticipants();
 		this.inbox = new ServerSocket(port);
 		
