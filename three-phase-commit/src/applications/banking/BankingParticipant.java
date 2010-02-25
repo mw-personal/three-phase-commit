@@ -4,26 +4,25 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import threePhaseCommit.ThreePhaseCommitParticipant;
 import transactionProtocol.Participant;
 import transactionProtocol.Vote;
 
 
-public class BankingParticipant extends Participant<BankingRequest> {
+public class BankingParticipant extends ThreePhaseCommitParticipant<BankingRequest> {
 
 	private Map<String, Double> accounts;
-	
+
 	public BankingParticipant(String uid, int ranking, String defaultVote,
-			InetSocketAddress address, InetSocketAddress heartAddress,
-			Map<String, InetSocketAddress> addressBook,
-			Map<String, InetSocketAddress> heartBook, String logFile)
+			InetSocketAddress address,
+			Set<Participant<BankingRequest>> participants, String logFile)
 			throws IOException {
-		super(uid, ranking, defaultVote, address, heartAddress, addressBook, heartBook,
-				logFile);
-		
+		super(uid, ranking, defaultVote, address, participants, logFile);
 		this.accounts = new HashMap<String, Double>();
 	}
-
+	
 	@Override
 	public void abort() {
 		// TODO Auto-generated method stub
