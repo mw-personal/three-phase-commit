@@ -41,6 +41,17 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		this.address = address;
 	}
 	
+	
+	
+	@Override
+	protected void finalize() throws Throwable {
+		// TODO Auto-generated method stub
+		this.inbox.close();
+		super.finalize();
+	}
+
+
+
 	public void initParticipants() {
 		SortedSet<P> sortedParticipants = new TreeSet<P>(new ParticipantComparator<R, P>());
 		sortedParticipants.addAll(launcher.getParticipants());
