@@ -144,9 +144,9 @@ public abstract class Participant<R extends Request> {
 	// methods for changing state
 	//
 	
-	public abstract void abort();
+	public abstract void abort(R r);
 	public abstract Vote castVote(R r);
-	public abstract void commit();
+	public abstract void commit(R r);
 	public abstract void startCommitProtocol();
 	public abstract void startTerminationProtocol();
 
