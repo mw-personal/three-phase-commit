@@ -206,6 +206,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					 */
 					if(decision){
 						this.getLog().log(COMMIT);
+						this.commit(message.getRequest());
 						this.sendMessage(this.getManagerAddress().getHostName(),
 								this.getManagerAddress(), Message.MessageType.COMMIT, message.getRequest());
 						if(thread.isInterrupted(C_FAIL_AFTER_COMMIT_BEFORE_SEND)){
@@ -373,7 +374,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 										case COMMIT: 
 											log.log(COMMIT);
 											this.state = State.COMMITTED;
-
+											this.commit(message.getRequest());
 											if (thread.isInterrupted(P_FAIL_AFTER_COMMIT)) {
 												throw new InterruptedException();
 											}
