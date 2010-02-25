@@ -42,11 +42,12 @@ public abstract class TransactionManager<R extends Request,
 	private InetSocketAddress address;
 	private ServerSocket inbox;
 
-	public TransactionManager(Class<P> type, String config, int port, InetSocketAddress address) throws IOException, JSONException {
+	public TransactionManager(Class<P> type, String config, InetSocketAddress address) throws IOException, JSONException {
 		// this.coordinator = // run election protocol(addressBook); 
 		this.launcher = new ParticipantThreadPool<R,P>(type, config);
 		this.addressBook = this.launcher.getParticipants();
-		this.inbox = new ServerSocket(port);
+		this.inbox = new ServerSocket(address.getPort());
+		this.address = address;
 	}
 	
 	public abstract Protocol getCommitProtocol();
@@ -68,7 +69,7 @@ public abstract class TransactionManager<R extends Request,
 			
 			// Send Initialize message to each particpant
 			for(final P p : participants){
-				init = new Message<R>(Message.MessageType.INITIATE, this.MANAGER, p.getUid(), System.currentTimeMillis(), request);
+				init = new Message<R>(Message.MessageType.INITIATE, this.address.getAddress().getHostAddress() + ":" + this.address.getPort(), p.getUid(), System.currentTimeMillis(), request);
 				server = new Socket(p.getAddress().getAddress(), p.getAddress().getPort());
 				writeObject(server.getOutputStream(), init);
 			}
