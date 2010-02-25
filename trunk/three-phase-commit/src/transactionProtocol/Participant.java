@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import logger.Logger;
@@ -29,7 +30,7 @@ public abstract class Participant<R extends Request> {
 	private int ranking; // used for election protocol
 	private Participant<R> coordinator;
 	private String defaultVote; 
-	private Set<Participant<R>> upList;
+	private SortedSet<Participant<R>> upList;
 	
 	// sockets for message passing
 	private Map<String, InetSocketAddress> addressBook;
@@ -79,7 +80,10 @@ public abstract class Participant<R extends Request> {
 	// general participant methods
 	//
 
-	public void setUpList(Set<Participant<R>> list){
+	public void setUpList(SortedSet<Participant<R>> list){
+		if (list.contains(this)) {
+			list.remove(this);
+		}
 		this.upList = list;
 	}
 	
