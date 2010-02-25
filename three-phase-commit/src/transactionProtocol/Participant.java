@@ -85,11 +85,10 @@ public abstract class Participant<R extends Request> {
 		this.participants = new HashMap<String, Participant<R>>();
 		this.upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, Participant<R>>());
 		
+		// TODO: we must be in our own uplist!
 		for (Participant<R> p : participants) {
-			if (p != this) {
-				this.participants.put(p.getUid(), p);
-				this.upList.add(p);
-			}
+			this.participants.put(p.getUid(), p);
+			this.upList.add(p);
 		}
 	}
 	
@@ -197,6 +196,11 @@ public abstract class Participant<R extends Request> {
 		}
 		
 		return m;
+	}
+	
+	protected void resetInboxSocket() throws IOException {
+		this.inbox.close();
+		this.inbox = new ServerSocket(this.address.getPort());
 	}
 	
 	private void writeObject(OutputStream stream, Message<R> m) throws IOException {

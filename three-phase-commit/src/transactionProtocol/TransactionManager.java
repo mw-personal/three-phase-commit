@@ -58,6 +58,8 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		
 		P coordinator = sortedParticipants.first();
 		
+		System.out.println("TransactionManager: The coordinator is " + coordinator.getUid());
+		
 		Set<P> participants = launcher.getParticipants();
 		for(final P p: participants){
 			p.setManagerAddress(this.address);
@@ -72,6 +74,7 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 	 * @param request
 	 */
 	public synchronized boolean sendRequest(R request){
+		System.out.println("TransactionManager: client request, " + request);
 		try{
 			Set<P> participants = launcher.getParticipants();
 			Message<R> init;
@@ -85,7 +88,9 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 				server.close();
 			}
 						
-			return receiveMessage().getType() == Message.MessageType.COMMIT;			
+			boolean result = receiveMessage().getType() == Message.MessageType.COMMIT;
+			System.out.println("TransactionManager: coordinator decided to " + ((result) ? "COMMIT" : "ABORT") + " " + request);
+			return result;
 		} catch(IOException e){
 			e.printStackTrace();
 			return false;
