@@ -8,17 +8,11 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.util.List;
 import java.util.Set;
 
+import loader.ParticipantThreadPool;
+
 import org.json.JSONException;
-
-import com.sun.tools.internal.xjc.reader.Messages;
-
-import loader.*;
-
-import applications.banking.BankingParticipant;
 
 /**
  * The TransactionManager is responsible for initiating the RunnableParticipant threads
@@ -32,7 +26,6 @@ import applications.banking.BankingParticipant;
  */
 public class TransactionManager<R extends Request, P extends Participant<R>>{
 	
-	private static final int INFINITE_TIMEOUT = 0;
 	public static final String MANAGER = "MANAGER";
 
 	private ParticipantThreadPool<R,P> launcher;
@@ -47,12 +40,12 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 	}
 	
 	public void initParticipants() {		
-		this.launcher.start();
 		Set<P> participants = launcher.getParticipants();
-		
 		for(final P p: participants){
 			p.setManagerAddress(this.address);
 		}
+		
+		this.launcher.start();
 	}
 	
 	/**
@@ -67,33 +60,26 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 			
 			// Send Initialize message to each particpant
 			for(final P p : participants){
-				init = new Message<R>(Message.MessageType.INITIATE, this.address.getAddress().getHostAddress() + ":" + this.address.getPort(), p.getUid(), System.currentTimeMillis(), request);
+				init = new Message<R>(Message.MessageType.INITIATE, MANAGER, p.getUid(), System.currentTimeMillis(), request);
 				server = new Socket(p.getAddress().getAddress(), p.getAddress().getPort());
 				writeObject(server.getOutputStream(), init);
+				server.close();
 			}
-			
-			Message<R> m = receiveMessage(INFINITE_TIMEOUT);
-			if(m.getType().equals(Message.MessageType.COMMIT)){
-				return true;
-			} 
-			
+						
+			return receiveMessage().getType() == Message.MessageType.COMMIT;			
 		} catch(IOException e){
 			e.printStackTrace();
-		} catch(MessageTimeoutException e){
+			return false;
 		}
-		return false;
 	}
 	
-	public Message<R> receiveMessage(int timeout) throws MessageTimeoutException {
+	public Message<R> receiveMessage() {
 		Message<R> m = null;
 		
 		try {
-			this.inbox.setSoTimeout(timeout);
 			Socket client = this.inbox.accept();
 			m = readObject(client.getInputStream());
 			client.close();
-		} catch (SocketTimeoutException e) {
-			throw new MessageTimeoutException();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
@@ -110,6 +96,7 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		oos.close();
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
 		ObjectInputStream ois =
 			new ObjectInputStream(stream);
