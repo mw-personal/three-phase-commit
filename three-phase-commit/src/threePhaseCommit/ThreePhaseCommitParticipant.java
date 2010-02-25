@@ -2,49 +2,55 @@ package threePhaseCommit;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Set;
+
+import logger.Logger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import transactionProtocol.Message;
+import transactionProtocol.MessageTimeoutException;
 import threePhaseCommit.ThreePhaseCommitTransactionManager.State;
 import transactionProtocol.Message;
 import transactionProtocol.MessageTimeoutException;
 import transactionProtocol.Participant;
 import transactionProtocol.ParticipantThread;
 import transactionProtocol.Request;
+import transactionProtocol.Vote;
+import transactionProtocol.Message.MessageType;
 
 public abstract class ThreePhaseCommitParticipant<R extends Request> extends Participant<R> {
 
-	
 	// Needed for termination protocol
-	enum State{
-		ABORTED,
-		COMMITTED,
-		COMMITTABLE,
-		UNCERTAIN
+	enum State {
+		ABORTED, COMMITTED, COMMITTABLE, UNCERTAIN
 	};
-	
+
 	// Timeouts
 	public static int TIMEOUT = 1000;
 	private static final int INFINITE_TIMEOUT = 0;
-	
+
 	// Log types
 	private static final String ABORT = "ABORT";
 	private static final String COMMIT = "COMMIT";
 	private static final String YES = "YES";
 	private static final String NO = "NO";
 	private static final String START = "START-3PC";
-	
+
 	// Participant points to fail
 	private static final String P_FAIL_BEFORE_INIT = "Participant-Fail-Before-Init";
 	private static final String P_FAIL_BEFORE_VOTE_REQ = "Participant-Fail-Before-Vote-Req";
 	private static final String P_FAIL_AFTER_VOTE_BEFORE_SEND = "Participant-Fail-After-Vote-Before-Send";
 	private static final String P_FAIL_AFTER_VOTE_AFTER_SEND = "Participant-Fail-After-Vote-After-Send";
-	private static final String P_FAIL_AFTER_ACK= "Participant-Fail-After-Ack";
+	private static final String P_FAIL_BEFORE_ACK = "Participant-Fail-Before-Ack";
+	private static final String P_FAIL_AFTER_ACK = "Participant-Fail-After-Ack";
 	private static final String P_FAIL_AFTER_COMMIT = "Participant-Fail-After-Commit";
 	private static final String P_FAIL_AFTER_ABORT = "Participant-Fail-After-Abort";
-	
+
 	// Coordinator points to fail
 	private static final String C_FAIL_BEFORE_INIT = "Coordinator-Fail-Before-Init";
 	private static final String C_FAIL_AFTER_VOTE_REQ = "Coordinator-Fail-After-Vote-Req";
@@ -53,36 +59,38 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	private static final String C_FAIL_AFTER_COMMIT_AFTER_SEND = "Coordinator-Fail-After-Commit-After-Send";
 	private static final String C_FAIL_AFTER_ABORT_BEFORE_SEND = "Coordinator-Fail-After-Abort-Before-Send";
 	private static final String C_FAIL_AFTER_ABORT_AFTER_SEND = "Coordinator-Fail-After-Abort-Before-Send";
-	
-	
-	private State state = State.ABORTED;
+
+	private State state;
 	
 	public ThreePhaseCommitParticipant(String uid, int ranking,
 			String defaultVote, InetSocketAddress address,
 			Set<Participant<R>> participants, String logFile)
 			throws IOException {
 		super(uid, ranking, defaultVote, address, participants, logFile);
+		this.state = State.ABORTED;
 	}
-	
+
+
 	@Override
 	public void startCommitProtocol() {
 		if (isCoordinator()) {
-			startCoordinatorCommitProtocol(); 
+			startCoordinatorCommitProtocol();
 		} else {
 			startParticipantCommitProtocol();
 		}
 	}
-	
+
 	@Override
 	public void startTerminationProtocol() {
 		if (isCoordinator()) {
-			startCoordinatorTerminationProtocol(); 
+			startCoordinatorTerminationProtocol();
 		} else {
 			startParticipantTerminationProtocol();
 		}
 	}
-	
+
 	public void startCoordinatorCommitProtocol() {
+
 		Message<R> message = null;
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = ((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
 		List<String> yesVotes;
@@ -213,17 +221,227 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 			return;
 		}
 	}
-	
-	
+
+	@SuppressWarnings("unchecked")
 	public void startParticipantCommitProtocol() {
+		Message<R> message;
+		Logger log = getLog();
+
+		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread 
+			= ((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
+
+		try {
+			// this while loop can be interrupted 
+			while (true) {
+
+				if (thread.isInterrupted(P_FAIL_BEFORE_INIT)) {
+					throw new InterruptedException();
+				}
+
+				// we sit and wait for an intiate protocol message...forever.
+				try {
+					System.out.println(getUid() + " is waiting for an intialize message");
+					message = receiveMessage(INFINITE_TIMEOUT);
+					System.out.println(getUid() + " received an intialize message");
+				} catch (MessageTimeoutException e) { continue; }
+
+				switch(message.getType()) {
+				
+				// on an intiate we wait for vote-request
+				case INITIATE:
+					// wait for vote-request
+					if (thread.isInterrupted(P_FAIL_BEFORE_VOTE_REQ)) {
+						throw new InterruptedException();
+					}
+					
+					try {
+						// spin until we receive a vote-req
+						while (true) {
+							message = receiveMessage(TIMEOUT);
+							switch(message.getType()) {
+							case ALIVE: 
+								handleResurrectedProcess(message.getSource());
+								continue;
+							case FAIL: 
+								handleFailedProcess(message.getSource());
+								continue;
+							case VOTE_REQ: 
+								break;
+							default: 
+								continue;
+							}							
+							break;
+						}
+					} catch (MessageTimeoutException e) {
+						log.log(ABORT);
+						state = State.ABORTED;
+						continue;
+					}					
+				
+					break;
+					
+				// if we receive a vote-req before an intiate, we break
+				// into the voting process
+				case VOTE_REQ: 
+					break;
+				// handle failed processes
+				case FAIL: 
+					handleFailedProcess(message.getSource());
+					continue;
+				// handle newly resurrected processes
+				case ALIVE:
+					handleResurrectedProcess(message.getSource());
+					continue;
+				// everything else is ignored
+				default: 
+					continue;
+				}
+
+				// cast our votes!
+				if (castVote(message.getRequest()).equals(Vote.YES)) {
+					log.log(YES);
+					state = State.UNCERTAIN;
+
+					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_BEFORE_SEND)) {
+						throw new InterruptedException();
+					}
+
+					// send yes to coordinator
+					sendMessage(getCurrentCoordinator().getUid(),
+							MessageType.YES, message.getRequest());
+
+					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_AFTER_SEND)) {
+						throw new InterruptedException();
+					}
+
+					// wait for Pre-Commit from Coordinator
+					try {
+						// spin until we receive a vote-req
+						while (true) {
+							message = receiveMessage(TIMEOUT);
+							switch(message.getType()) {
+							case ALIVE: 
+								handleResurrectedProcess(message.getSource());
+								continue;
+							case FAIL: 
+								handleFailedProcess(message.getSource());
+								continue;
+							case PRE_COMMIT: 
+								state = State.COMMITTABLE;
+
+								if (thread.isInterrupted(P_FAIL_BEFORE_ACK)) {
+									throw new InterruptedException();
+								}
+
+								// send ack to coordinator
+								sendMessage(getCurrentCoordinator().getUid(),
+										Message.MessageType.ACK, message.getRequest());
+
+								if (thread.isInterrupted(P_FAIL_AFTER_ACK)) {
+									throw new InterruptedException();
+								}
+
+								// wait for Commit from Coordinator
+								try {
+									// spin until we receive a commit 
+									while (true) {
+										message = receiveMessage(TIMEOUT);
+										switch(message.getType()) {
+										case ALIVE: 
+											handleResurrectedProcess(message.getSource());
+											continue;
+										case FAIL: 
+											handleFailedProcess(message.getSource());
+											continue;
+										case COMMIT: 
+											log.log(COMMIT);
+											state = State.COMMITTED;
+
+											if (thread.isInterrupted(P_FAIL_AFTER_COMMIT)) {
+												throw new InterruptedException();
+											}
+											
+											break;
+										default: 
+											continue;
+										}
+										
+										break;
+									}
+								} catch (MessageTimeoutException e) {
+									// initiate election protocol
+									// if elected then invoke coordinators algorithm
+									// else invoke participants algorithm
+									// return
+								}
+								
+								break;
+							case ABORT:
+								log.log(ABORT);
+								state = State.ABORTED;
+								continue;
+							default:
+								continue;
+							}
+							
+							break;
+						}
+					} catch (MessageTimeoutException e) {
+						// initiate election protocol
+						// if elected then invoke coordinators algorithm
+						// else invoke participants algorithm
+						// return
+					} 	
+				} 
+
+				// vote is no :(
+				else {						
+					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_BEFORE_SEND)) {
+						throw new InterruptedException();
+					}
+
+					// send no to coordinator
+					sendMessage(getCurrentCoordinator().getUid(),
+							MessageType.NO, message.getRequest());
+					
+					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_AFTER_SEND)) {
+						throw new InterruptedException();
+					}
+
+					log.log(ABORT);
+					state = State.ABORTED;
+
+					if (thread.isInterrupted(P_FAIL_AFTER_ABORT)) {
+						throw new InterruptedException();
+					}
+
+					// continue to next transaction
+					continue;
+				}
+			}
+		} 
 		
+		catch (InterruptedException e) {
+			// TODO close p's socket and kill p's heartbeat monitor
+			// upon return the thread's run() method will finish in turn killing
+			// the thread
+			return;
+		}
 	}
 
 	public void startCoordinatorTerminationProtocol() {
+
+	}
+
+	public void startParticipantTerminationProtocol() {
+
+	}
+	
+	private void handleResurrectedProcess(String uid) {
 		
 	}
 	
-	public void startParticipantTerminationProtocol() {
+	private void handleFailedProcess(String uid) {
 		
 	}
 	
