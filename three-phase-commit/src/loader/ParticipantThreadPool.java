@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.json.JSONException;
 
@@ -38,6 +40,18 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 			this.participantThreads
 					.put(p.getUid(), new ParticipantThread<R, P>(p, this.pointsToFail.get(p.getUid())));
 		}
+		
+		// Set up list for each Participant
+		Set<Participant<R>> upList = null;
+		for( P p : peeps){
+			upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, P>());
+			for ( P q : peeps){
+				if(!q.equals(p))
+					upList.add(q);
+			}
+			p.setUpList(upList);
+		}
+		
 		this.started = false;
 	}
 	

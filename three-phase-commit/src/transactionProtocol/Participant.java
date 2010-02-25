@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import logger.Logger;
 import logger.TransactionLogger;
@@ -26,15 +28,9 @@ public abstract class Participant<R extends Request> {
 	private Logger logger;
 	private int ranking; // used for election protocol
 	private Participant<R> coordinator;
-	// TODO: we need a better way of handling this
-	//       it is likely each participant will need
-	//       somesort of innerstate.  might be easier
-	//       to begina a participant at some given state
-	// TODO: can different protocols put participants in
-	//       different states? how do we genercise that?
 	private String defaultVote; 
-	private List<String> upList;
-
+	private Set<Participant<R>> upList;
+	
 	// sockets for message passing
 	private Map<String, InetSocketAddress> addressBook;
 	private InetSocketAddress address;
@@ -59,12 +55,8 @@ public abstract class Participant<R extends Request> {
 		
 		this.inbox = new ServerSocket(this.address.getPort());
 		
-		// Initialize "up list"
-		this.upList = new ArrayList<String>();
-		for(String id : addressBook.keySet()){
-			if(id != this.uid)
-				this.upList.add(id);
-		}
+		// Must be set by ParticipantThreadPool
+		this.upList = null;
 	}
 	
 	@Override
@@ -87,6 +79,10 @@ public abstract class Participant<R extends Request> {
 	// general participant methods
 	//
 
+	public void setUpList(Set<Participant<R>> list){
+		this.upList = list;
+	}
+	
 	public void setLog(Logger logger) {
 		this.logger = logger;
 	}
@@ -118,6 +114,10 @@ public abstract class Participant<R extends Request> {
 		}
 	}
 	
+	public int getRanking(){
+		return this.ranking;
+	}
+	
 	//
 	// methods for changing state
 	//
@@ -133,8 +133,8 @@ public abstract class Participant<R extends Request> {
 	//
 
 	public void broadcastMessage(MessageType messageType, R request) {
-		for (String uid : this.upList) {
-			sendMessage(uid, addressBook.get(uid), messageType, request);
+		for (Participant<R> p : this.upList) {
+			sendMessage(p.getUid(), messageType, request);
 		}
 	}
 
@@ -196,7 +196,7 @@ public abstract class Participant<R extends Request> {
 		return coordinator;
 	}
 	
-	public List<String> getUpList(){
+	public Set<Participant<R>> getUpList(){
 		return upList;
 	}
 
