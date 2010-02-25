@@ -21,6 +21,7 @@ public class Message<R extends Request> implements Serializable {
 		NO,
 		ABORT,
 		INITIATE,
+		FAIL
 		}
 	
 	private MessageType type;
