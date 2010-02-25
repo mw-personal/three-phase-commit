@@ -67,10 +67,10 @@ public class TestsWithoutFailures {
 	@Test
 	public void testCreateAccountValidAmount() {
 		// run this a few times to populate the database
-		//for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 5; i++) {
 			Assert.assertTrue(
 					sendRequestToManager(BankingRequestType.CREATE, freshAccountName(), 200));
-		//}
+		}
 	}
 	
 	//@Test

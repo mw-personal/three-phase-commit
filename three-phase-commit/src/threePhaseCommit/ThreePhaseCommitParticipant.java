@@ -23,7 +23,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	};
 
 	// Timeouts
-	public static int TIMEOUT = 2000;
+	public static int TIMEOUT = 0;
 	private static final int INFINITE_TIMEOUT = 0;
 
 	// Log types
@@ -103,6 +103,8 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						e1.printStackTrace();
 					}
 
+					log.log(this.getUid() + ": awaiting intialization.");
+					
 					// wait for initialization
 					if (thread.isInterrupted(C_FAIL_BEFORE_INIT)) {
 						throw new InterruptedException();
@@ -228,8 +230,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						if (thread.isInterrupted(C_FAIL_AFTER_ABORT_AFTER_SEND)) {
 							throw new InterruptedException();
 						}
-						
-						continue intial_state;
 					}
 				}
 		} catch (InterruptedException e) {
@@ -245,12 +245,14 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		Logger log = getLog();
 
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread 
-		= ((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
+			= ((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
 
 		try {
 			// this while loop can be interrupted 
 			while (true) {
 
+				log.log(this.getUid() + ": awaiting intialization.");
+				
 				if (thread.isInterrupted(P_FAIL_BEFORE_INIT)) {
 					throw new InterruptedException();
 				}
@@ -440,9 +442,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					if (thread.isInterrupted(P_FAIL_AFTER_ABORT)) {
 						throw new InterruptedException();
 					}
-
-					// continue to next transaction
-					continue;
 				}
 			}
 		} 
