@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.json.JSONException;
@@ -34,7 +35,7 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		this.participantThreads = new HashMap<String, Thread>();
 		this.failedParticipants = new ArrayList<String>();
 
-		Set<Participant<R>> upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, P>());
+		SortedSet<Participant<R>> upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, P>());
 		for (P p : peeps) {
 			this.participantMap.put(p.getUid(), p);
 			this.participantThreads
@@ -44,9 +45,7 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		
 		// Set up list for each participant
 		for( P p : peeps){
-			upList.remove(p);
-			p.setUpList(upList);
-			upList.add(p);
+			p.setUpList(new TreeSet<Participant<R>>(upList));
 		}
 		
 		this.started = false;
