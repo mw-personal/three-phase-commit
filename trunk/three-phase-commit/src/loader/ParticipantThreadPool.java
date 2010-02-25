@@ -34,22 +34,19 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		this.participantThreads = new HashMap<String, Thread>();
 		this.failedParticipants = new ArrayList<String>();
 
-		
+		Set<Participant<R>> upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, P>());
 		for (P p : peeps) {
 			this.participantMap.put(p.getUid(), p);
 			this.participantThreads
 					.put(p.getUid(), new ParticipantThread<R, P>(p, this.pointsToFail.get(p.getUid())));
+			upList.add(p);
 		}
 		
-		// Set up list for each Participant
-		Set<Participant<R>> upList = null;
+		// Set up list for each participant
 		for( P p : peeps){
-			upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, P>());
-			for ( P q : peeps){
-				if(!q.equals(p))
-					upList.add(q);
-			}
+			upList.remove(p);
 			p.setUpList(upList);
+			upList.add(p);
 		}
 		
 		this.started = false;
