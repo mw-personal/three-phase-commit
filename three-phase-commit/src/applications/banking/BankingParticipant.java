@@ -24,7 +24,7 @@ public class BankingParticipant extends ThreePhaseCommitParticipant<BankingReque
 	}
 	
 	@Override
-	public void abort() {
+	public void abort(BankingRequest r) {
 		// TODO Auto-generated method stub
 	}
 
@@ -50,8 +50,22 @@ public class BankingParticipant extends ThreePhaseCommitParticipant<BankingReque
 	}
 
 	@Override
-	public void commit() {
-		// TODO Auto-generated method stub
+	public void commit(BankingRequest r) {
+		switch(r.getType()){
+		case CREATE:
+			accounts.put(r.getAccountName(), r.getAmount());
+			return;
+		case DELETE:
+			accounts.remove(r.getAccountName());
+			return;
+		case DEPOSIT:
+			accounts.put(r.getAccountName(), r.getAmount());
+			return;
+		case WITHDRAW:
+			accounts.put(r.getAccountName(), 
+					accounts.get(r.getAccountName()) - r.getAmount());
+			return;
+		}
 	}	
 	
 	@Override
