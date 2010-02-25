@@ -80,10 +80,11 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void startCoordinatorCommitProtocol() {
-
 		Message<R> message = null;
-		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = ((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
+		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = 
+			((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
 		List<String> yesVotes;
 		boolean decision;
 		long upSize;
@@ -106,6 +107,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					if(message == null){
 						continue;
 					}
+					
 					switch(message.getType()){
 						case VOTE_REQ: continue;
 						case YES: continue;
@@ -160,7 +162,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						}
 					}
 					
-					if(decision){
+					if(decision && this.castVote(message.getRequest()) == Vote.YES){
 						/** 
 						 * Send Pre-Commit
 						 */
@@ -514,5 +516,5 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		}
 			
 		return par;
-	}
+	}	
 }
