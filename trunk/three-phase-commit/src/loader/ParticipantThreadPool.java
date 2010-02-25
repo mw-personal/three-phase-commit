@@ -2,15 +2,16 @@ package loader;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONException;
 
-import transactionProtocol.*;
+import transactionProtocol.Participant;
+import transactionProtocol.ParticipantThread;
+import transactionProtocol.Request;
 
 public class ParticipantThreadPool<R extends Request, P extends Participant<R>> {
 	
@@ -18,7 +19,7 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 	private Map<String, String> pointsToFail;
 	private Map<String, P> participantMap;
 	private Map<String, Thread> participantThreads;
-	private List<String> failedParticipants;
+	private Set<String> failedParticipants;
 	
 	public ParticipantThreadPool(Class<P> type, String configFile) throws IOException, JSONException {
 		this(type, new File(configFile));
@@ -31,7 +32,7 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		this.pointsToFail = pc.getPointsToFail();
 		this.participantMap = new HashMap<String, P>();
 		this.participantThreads = new HashMap<String, Thread>();
-		this.failedParticipants = new ArrayList<String>();
+		this.failedParticipants = new HashSet<String>();
 
 		
 		for (P p : peeps) {
@@ -90,12 +91,12 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		return true;
 	}
 	
-	public List<String> getFailedParticipants() {
+	public Set<String> getFailedParticipants() {
 		return this.failedParticipants;
 	}
 		
-	public List<P> getParticipants(){
-		return new ArrayList<P>(this.participantMap.values());
+	public Set<P> getParticipants(){
+		return new HashSet<P>(this.participantMap.values());
 	}
 	
 	public void stop() {
