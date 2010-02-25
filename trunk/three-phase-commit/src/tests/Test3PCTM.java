@@ -1,12 +1,12 @@
 package tests;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 import loader.ParticipantConfiguration;
 
 import org.json.JSONException;
 
-import threePhaseCommit.ThreePhaseCommitTransactionManager;
 import transactionProtocol.TransactionManager;
 
 import applications.banking.BankingParticipant;
@@ -21,8 +21,8 @@ public class Test3PCTM {
 		ParticipantConfiguration.generateParticipantConfigurationFile(numParticipants, 8090, configFile);
 		
 		TransactionManager<BankingRequest, BankingParticipant> tm = 
-			new ThreePhaseCommitTransactionManager<BankingRequest, BankingParticipant>(
-				BankingParticipant.class, configFile, 8080);
+			new TransactionManager<BankingRequest, BankingParticipant>(
+				BankingParticipant.class, configFile, new InetSocketAddress(8080));
 
 		tm.initParticipants();
 		
