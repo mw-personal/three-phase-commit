@@ -30,8 +30,7 @@ import applications.banking.BankingParticipant;
  *
  * @param <P>
  */
-public abstract class TransactionManager<R extends Request, 
-	P extends Participant<R>> implements TransactionProtocol{
+public class TransactionManager<R extends Request, P extends Participant<R>>{
 	
 	private static final int INFINITE_TIMEOUT = 0;
 	public static final String MANAGER = "MANAGER";
