@@ -19,6 +19,6 @@ public class Client<R extends Request, P extends Participant<R>> implements Runn
 	public void run() {
 		System.out.println(clientId + " is sending request to TransactionManager");
 		manager.sendRequest(request);
-	}
-
+	}	
+	
 }
