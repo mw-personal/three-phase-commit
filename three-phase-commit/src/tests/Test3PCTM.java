@@ -18,11 +18,11 @@ public class Test3PCTM {
 		final String configFile = "testparticipantconfig.txt";
 		final int numParticipants = 4;
 		
-		ParticipantConfiguration.generateParticipantConfigurationFile(numParticipants, 8090, configFile);
+		ParticipantConfiguration.generateParticipantConfigurationFile(numParticipants, 9000, configFile);
 		
 		TransactionManager<BankingRequest, BankingParticipant> tm = 
 			new TransactionManager<BankingRequest, BankingParticipant>(
-				BankingParticipant.class, configFile, new InetSocketAddress(8080));
+				BankingParticipant.class, configFile, new InetSocketAddress(8082));
 
 		tm.initParticipants();
 		
@@ -38,6 +38,10 @@ public class Test3PCTM {
 		BankingClient client1 = new BankingClient(tm, request, 1);
 		new Thread(client1).start();
 		
+		request = new BankingRequest(BankingRequest.BankingRequestType.WITHDRAW,
+				"client1", 50);
+		BankingClient client2 = new BankingClient(tm, request, 2);
+		new Thread(client2).start();
 		
 		// create client threads, passing tpctm, which call
 		// tpctm.sendRequest(null);
