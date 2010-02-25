@@ -8,10 +8,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.json.JSONArray;
@@ -22,15 +23,13 @@ import transactionProtocol.Participant;
 import transactionProtocol.Request;
 
 
-public class ParticipantConfiguration<P extends Participant<? extends Request>> {
+public class ParticipantConfiguration<R extends Request, P extends Participant<R>> {
 	
 	// expected JSON tags!
 	public static final String PARTICIPANTS = "participants";
 	public static final String UID = "uid";
 	public static final String INBOX_IP = "inbox-ip";
 	public static final String INBOX_PORT = "inbox-port";
-	public static final String HEART_IP = "heartbeat-ip";
-	public static final String HEART_PORT = "heartbeat-port";
 	public static final String RANKING = "ranking";
 	public static final String DEFAULT_VOTE = "default-vote";
 	public static final String LOG_FILE = "log-file";
@@ -68,11 +67,11 @@ public class ParticipantConfiguration<P extends Participant<? extends Request>> 
 	}
 	
 	// reader	
-	public List<P> getParticipants() throws JSONException, UnknownHostException {
+	@SuppressWarnings("unchecked")
+	public Set<P> getParticipants() throws JSONException, UnknownHostException {
 		JSONArray jarray = this.jobj.getJSONArray(PARTICIPANTS);
 		
-		ArrayList<P> result = new ArrayList<P>(jarray.length());
-		Map<String, InetSocketAddress> addressBook = new HashMap<String, InetSocketAddress>();
+		Set<P> result = new HashSet<P>(jarray.length());
 		
 		for(int i = 0; i < jarray.length(); i++) {
 			JSONObject j = jarray.getJSONObject(i);
@@ -81,9 +80,6 @@ public class ParticipantConfiguration<P extends Participant<? extends Request>> 
 			InetSocketAddress address = new InetSocketAddress(
 					InetAddress.getByName(j.getString(INBOX_IP)),
 					j.getInt(INBOX_PORT));
-			InetSocketAddress heartAddress = new InetSocketAddress(
-					InetAddress.getByName(j.getString(HEART_IP)),
-					j.getInt(HEART_PORT));
 			int ranking = j.getInt(RANKING);
 			String defaultVote = j.getString(DEFAULT_VOTE);
 			String logFile = j.getString(LOG_FILE);
@@ -92,11 +88,9 @@ public class ParticipantConfiguration<P extends Participant<? extends Request>> 
 			try {
 				p = type.getDeclaredConstructor(String.class, int.class,
 						String.class, InetSocketAddress.class,
-						InetSocketAddress.class, Map.class, Map.class,
-						String.class).newInstance(uid, ranking, defaultVote,
-						address, heartAddress, null, null, logFile);
+						Set.class, String.class).newInstance(uid, ranking, defaultVote,
+						address, null, logFile);
 				result.add(p);
-				addressBook.put(uid, address);
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -121,7 +115,7 @@ public class ParticipantConfiguration<P extends Participant<? extends Request>> 
 		// we've generated a list of all participants, but we need to give
 		// each participant an address book
 		for (P p : result) {
-			p.setAddressBook(new HashMap<String, InetSocketAddress>(addressBook));
+			p.setParticipants((Set<Participant<R>>) result);
 		}
 		
 		return result;
@@ -160,8 +154,6 @@ public class ParticipantConfiguration<P extends Participant<? extends Request>> 
 				jobj.put(UID, UUID.randomUUID().toString());
 				jobj.put(INBOX_IP, ipAddress);
 				jobj.put(INBOX_PORT, currentPort++);
-				jobj.put(HEART_IP, ipAddress);
-				jobj.put(HEART_PORT, currentPort++);
 				jobj.put(RANKING, -1);
 				jobj.put(DEFAULT_VOTE, "?");
 				jobj.put(LOG_FILE, "logs/mylogfile" + i + ".txt");

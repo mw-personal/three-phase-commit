@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.json.JSONException;
 
@@ -27,25 +25,19 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 	}
 	
 	public ParticipantThreadPool(Class<P> type, File configFile) throws IOException, JSONException {
-		ParticipantConfiguration<P> pc = new ParticipantConfiguration<P>(type, configFile);
+		ParticipantConfiguration<R, P> pc = new ParticipantConfiguration<R, P>(type, configFile);
 		
-		List<P> peeps = pc.getParticipants();
+		Set<P> peeps = pc.getParticipants();
 		this.pointsToFail = pc.getPointsToFail();
 		this.participantMap = new HashMap<String, P>();
 		this.participantThreads = new HashMap<String, Thread>();
 		this.failedParticipants = new ArrayList<String>();
 
-		SortedSet<Participant<R>> upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, P>());
+		
 		for (P p : peeps) {
 			this.participantMap.put(p.getUid(), p);
 			this.participantThreads
 					.put(p.getUid(), new ParticipantThread<R, P>(p, this.pointsToFail.get(p.getUid())));
-			upList.add(p);
-		}
-		
-		// Set up list for each participant
-		for( P p : peeps){
-			p.setUpList(new TreeSet<Participant<R>>(upList));
 		}
 		
 		this.started = false;
