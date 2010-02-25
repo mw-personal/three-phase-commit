@@ -154,7 +154,7 @@ public class ParticipantConfiguration<R extends Request, P extends Participant<R
 				jobj.put(UID, UUID.randomUUID().toString());
 				jobj.put(INBOX_IP, ipAddress);
 				jobj.put(INBOX_PORT, currentPort++);
-				jobj.put(RANKING, -1);
+				jobj.put(RANKING, i);
 				jobj.put(DEFAULT_VOTE, "?");
 				jobj.put(LOG_FILE, "logs/mylogfile" + i + ".txt");
 				jobj.put(POINT_TO_FAIL, "");
