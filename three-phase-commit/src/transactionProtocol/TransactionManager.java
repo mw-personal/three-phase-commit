@@ -48,6 +48,11 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 	
 	public void initParticipants() {		
 		this.launcher.start();
+		Set<P> participants = launcher.getParticipants();
+		
+		for(final P p: participants){
+			p.setManagerAddress(this.address);
+		}
 	}
 	
 	/**

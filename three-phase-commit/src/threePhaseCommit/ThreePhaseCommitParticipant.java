@@ -1,6 +1,7 @@
 package threePhaseCommit;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ import transactionProtocol.Vote;
 import transactionProtocol.Message.MessageType;
 
 public abstract class ThreePhaseCommitParticipant<R extends Request> extends Participant<R> {
-
+	
 	// Needed for termination protocol
 	enum State {
 		ABORTED, COMMITTED, COMMITTABLE, UNCERTAIN
@@ -125,9 +126,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						case ABORT: continue;
 						case INITIATE: getLog().log(START);
 										break;
-						case FAIL: handleFailureMessage(message.getSource());
+						case FAIL: handleFailedProcess(message.getSource());
 									continue;
-						case ALIVE:	handleAliveMessage(message.getSource());
+						case ALIVE:	handleResurrectedProcess(message.getSource());
 									continue;
 					}
 					
@@ -162,9 +163,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 										return;
 							case ABORT:	continue;
 							case INITIATE:	continue;
-							case FAIL:	handleFailureMessage(message.getSource());
+							case FAIL:	handleFailedProcess(message.getSource());
 										continue;
-							case ALIVE:	handleAliveMessage(message.getSource());
+							case ALIVE:	handleResurrectedProcess(message.getSource());
 										continue;
 						}
 					}
@@ -185,7 +186,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							try{
 								message = receiveMessage(TIMEOUT);
 							} catch(MessageTimeoutException e){
-								coordinatorAbort(message);
+								decision = false;
 								return;
 							}
 							switch(message.getType()){
@@ -197,16 +198,38 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							case NO: 	continue;
 							case ABORT:	continue;
 							case INITIATE:	continue;
-							case FAIL:	handleFailureMessage(message.getSource());
+							case FAIL:	handleFailedProcess(message.getSource());
+										decision = false;
 										continue;
-							case ALIVE:	handleAliveMessage(message.getSource());
+							case ALIVE:	handleResurrectedProcess(message.getSource());
 										continue;
 							}
 						}
 					} else{
 						// Decision is Abort
 						coordinatorAbort(message);
+						continue;
 					}
+					
+					/**
+					 * Commit/Abort
+					 */
+					if(decision){
+						this.getLog().log(COMMIT);
+						this.sendMessage(this.getManagerAddress().getHostName(),
+								this.getManagerAddress(), Message.MessageType.COMMIT, message.getRequest());
+						if(thread.isInterrupted(C_FAIL_AFTER_COMMIT_BEFORE_SEND)){
+							throw new InterruptedException();
+						}
+						this.broadcastMessage(Message.MessageType.COMMIT, message.getRequest());
+						if(thread.isInterrupted(C_FAIL_AFTER_COMMIT_AFTER_SEND)){
+							throw new InterruptedException();
+						}
+						
+					} else{
+						coordinatorAbort(message);
+					}
+					
 				} catch(ClassCastException e){
 					e.printStackTrace();
 					getLog().log(ABORT);
@@ -217,14 +240,14 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				}
 			}
 		} catch(InterruptedException e){
-			this.broadcastMessage(Message.MessageType.FAIL, message.getRequest());
+			this.broadcastMessage(Message.MessageType.FAIL, null);
 			return;
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public void startParticipantCommitProtocol() {
-		Message<R> message;
+		Message<R> message = null;
 		Logger log = getLog();
 
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread 
@@ -422,9 +445,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		} 
 		
 		catch (InterruptedException e) {
-			// TODO close p's socket and kill p's heartbeat monitor
-			// upon return the thread's run() method will finish in turn killing
-			// the thread
+			this.broadcastMessage(Message.MessageType.FAIL, null);
 			return;
 		}
 	}
@@ -445,20 +466,12 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		
 	}
 	
-	private void handleFailureMessage(String uid){
-		
-	}
-	
 	private void handleAbortMessage(String uid){
 		
 	}
 	
-	private void handleAliveMessage(String uid){
-
-	}
-	
 	private void coordinatorAbort(Message<R> message){
-		this.sendMessage(this.getUid(), Message.MessageType.ABORT, message.getRequest());
+		this.getLog().log(ABORT);
+		this.broadcastMessage(Message.MessageType.ABORT, message.getRequest());
 	}
-
 }

@@ -34,6 +34,7 @@ public abstract class Participant<R extends Request> {
 	// sockets for message passing
 	private InetSocketAddress address;
 	private ServerSocket inbox;
+	private InetSocketAddress managerAddress;
 	
 	public Participant(String uid, int ranking, String defaultVote,
 			InetSocketAddress address, 
@@ -48,6 +49,7 @@ public abstract class Participant<R extends Request> {
 		// address for TCP messaging
 		this.address = address;
 		this.inbox = new ServerSocket(this.address.getPort());
+		this.setManagerAddress(null);
 		
 		// populate participants map
 		if (participants != null) {
@@ -216,5 +218,13 @@ public abstract class Participant<R extends Request> {
 		} else {
 			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
 		}
+	}
+
+	public void setManagerAddress(InetSocketAddress managerAddress) {
+		this.managerAddress = managerAddress;
+	}
+
+	public InetSocketAddress getManagerAddress() {
+		return managerAddress;
 	}
 }
