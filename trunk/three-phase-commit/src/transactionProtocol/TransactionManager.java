@@ -35,9 +35,7 @@ public abstract class TransactionManager<R extends Request,
 	
 	private static final int INFINITE_TIMEOUT = 0;
 	public static final String MANAGER = "MANAGER";
-	
-	// private P coordinator;
-	private Set<P> addressBook;
+
 	private ParticipantThreadPool<R,P> launcher;
 	private InetSocketAddress address;
 	private ServerSocket inbox;
@@ -45,13 +43,9 @@ public abstract class TransactionManager<R extends Request,
 	public TransactionManager(Class<P> type, String config, InetSocketAddress address) throws IOException, JSONException {
 		// this.coordinator = // run election protocol(addressBook); 
 		this.launcher = new ParticipantThreadPool<R,P>(type, config);
-		this.addressBook = this.launcher.getParticipants();
 		this.inbox = new ServerSocket(address.getPort());
 		this.address = address;
 	}
-	
-	public abstract Protocol getCommitProtocol();
-	public abstract Protocol getTerminationProtocol();
 	
 	public void initParticipants() {		
 		this.launcher.start();
@@ -112,7 +106,6 @@ public abstract class TransactionManager<R extends Request,
 		oos.close();
 	}
 	
-	@SuppressWarnings("unchecked")
 	private Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
 		ObjectInputStream ois =
 			new ObjectInputStream(stream);
@@ -125,17 +118,4 @@ public abstract class TransactionManager<R extends Request,
 			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
 		}
 	}
-	
-//	/**
-//	 * Send reply back to outside world
-//	 */
-//	public void sendReply(Reply reply){
-//		try{
-//			Socket client = reply.getServer().accept();
-//			reply.writeObject(client.getOutputStream());
-//			client.close();
-//		} catch(Exception e){
-//			e.printStackTrace();
-//		}
-//	}
 }
