@@ -9,6 +9,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import loader.ParticipantThreadPool;
 
@@ -39,10 +41,16 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		this.address = address;
 	}
 	
-	public void initParticipants() {		
+	public void initParticipants() {
+		SortedSet<P> sortedParticipants = new TreeSet<P>(new ParticipantComparator<R, P>());
+		sortedParticipants.addAll(launcher.getParticipants());
+		
+		P coordinator = sortedParticipants.first();
+		
 		Set<P> participants = launcher.getParticipants();
 		for(final P p: participants){
 			p.setManagerAddress(this.address);
+			p.setCurrentCoordinator(coordinator);
 		}
 		
 		this.launcher.start();
