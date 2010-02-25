@@ -1,10 +1,16 @@
 package transactionProtocol;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONException;
 
@@ -27,24 +33,20 @@ import applications.banking.BankingParticipant;
 public abstract class TransactionManager<R extends Request, 
 	P extends Participant<R>> implements TransactionProtocol{
 	
+	private static final int INFINITE_TIMEOUT = 0;
 	public static final String MANAGER = "MANAGER";
 	
 	// private P coordinator;
-	private List<P> addressBook;
+	private Set<P> addressBook;
 	private ParticipantThreadPool<R,P> launcher;
+	private InetSocketAddress address;
 	private ServerSocket inbox;
 
-	public TransactionManager(Class<P> type, String config, int port) throws IOException, JSONException {
+	public TransactionManager(Class<P> type, String config, int port, InetSocketAddress address) throws IOException, JSONException {
 		// this.coordinator = // run election protocol(addressBook); 
 		this.launcher = new ParticipantThreadPool<R,P>(type, config);
 		this.addressBook = this.launcher.getParticipants();
 		this.inbox = new ServerSocket(port);
-		
-		// set protocols for participants
-		for (P p : this.addressBook) {
-			p.setCommitProtocol(getCommitProtocol());
-			p.setTerminationProtocol(getTerminationProtocol());
-		}
 	}
 	
 	public abstract Protocol getCommitProtocol();
@@ -58,9 +60,9 @@ public abstract class TransactionManager<R extends Request,
 	 * API for outside world to send a request to the DS.
 	 * @param request
 	 */
-	public synchronized void sendRequest(R request){
+	public synchronized boolean sendRequest(R request){
 		try{
-			List<P> participants = launcher.getParticipants();
+			Set<P> participants = launcher.getParticipants();
 			Message<R> init;
 			Socket server;
 			
@@ -68,14 +70,60 @@ public abstract class TransactionManager<R extends Request,
 			for(final P p : participants){
 				init = new Message<R>(Message.MessageType.INITIATE, this.MANAGER, p.getUid(), System.currentTimeMillis(), request);
 				server = new Socket(p.getAddress().getAddress(), p.getAddress().getPort());
-				Message.writeObject(server.getOutputStream(), init);
+				writeObject(server.getOutputStream(), init);
 			}
+			
+			Message<R> m = receiveMessage(INFINITE_TIMEOUT);
+			if(m.getType().equals(Message.MessageType.COMMIT)){
+				return true;
+			} 
+			
 		} catch(IOException e){
 			e.printStackTrace();
+		} catch(MessageTimeoutException e){
 		}
+		return false;
 	}
 	
+	public Message<R> receiveMessage(int timeout) throws MessageTimeoutException {
+		Message<R> m = null;
+		
+		try {
+			this.inbox.setSoTimeout(timeout);
+			Socket client = this.inbox.accept();
+			m = readObject(client.getInputStream());
+			client.close();
+		} catch (SocketTimeoutException e) {
+			throw new MessageTimeoutException();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return m;
+	}
 	
+	private void writeObject(OutputStream stream, Message<R> m) throws IOException {
+		ObjectOutputStream oos = 
+			new ObjectOutputStream(stream);
+		oos.writeObject(m);
+		oos.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
+		ObjectInputStream ois =
+			new ObjectInputStream(stream);
+		Object obj = ois.readObject();
+		ois.close();
+		
+		if(obj != null && obj instanceof Message<?>) {
+			return (Message<R>) obj;
+		} else {
+			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
+		}
+	}
 	
 //	/**
 //	 * Send reply back to outside world
