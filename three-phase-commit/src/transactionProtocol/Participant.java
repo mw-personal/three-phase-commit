@@ -9,9 +9,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -25,39 +24,35 @@ public abstract class Participant<R extends Request> {
 
 	// general information regarding a process
 	private String uid;
-	private boolean isCoordinator;
 	private Logger logger;
-	private int ranking; // used for election protocol
-	private Participant<R> coordinator;
+	private int ranking;
+	private Participant<R> currentCoordinator;
 	private String defaultVote; 
 	private SortedSet<Participant<R>> upList;
+	private Map<String, Participant<R>> participants;
 	
 	// sockets for message passing
-	private Map<String, InetSocketAddress> addressBook;
 	private InetSocketAddress address;
 	private ServerSocket inbox;
 	
 	public Participant(String uid, int ranking, String defaultVote,
-			InetSocketAddress address,
-			Map<String, InetSocketAddress> addressBook, String logFile)
-			throws IOException {
+			InetSocketAddress address, 
+			Set<Participant<R>> participants,
+			String logFile) throws IOException {
 		this.uid = uid;
-		this.isCoordinator = false;
 		this.logger = new TransactionLogger(logFile, true);
 		this.ranking = ranking;
+		this.currentCoordinator = null;
 		this.defaultVote = defaultVote;
-		
+
+		// address for TCP messaging
 		this.address = address;
-		this.addressBook = (addressBook == null) ? new HashMap<String, InetSocketAddress>()
-				: addressBook;
-		if (this.addressBook.containsKey(this.getUid())) {
-			this.addressBook.remove(this.getUid());
-		}
-		
 		this.inbox = new ServerSocket(this.address.getPort());
 		
-		// Must be set by ParticipantThreadPool
-		this.upList = null;
+		// populate participants map
+		if (participants != null) {
+			this.setParticipants(participants);
+		}
 	}
 	
 	@Override
@@ -66,11 +61,15 @@ public abstract class Participant<R extends Request> {
 		
 		sb.append(this.uid);
 		sb.append("\n{");
-		sb.append("\n  isCoordinator=" + this.isCoordinator);
 		sb.append("\n  logfile=" + this.logger.getFilePath());
 		sb.append("\n  ranking=" + this.ranking);
 		sb.append("\n  defaultVote=" + this.defaultVote);
 		sb.append("\n  address=" + this.address);
+		sb.append("\n  participants={");
+		for (Participant<R> p : this.participants.values()) {
+			sb.append("\n      " + p.uid + ":" + p.getRanking());
+		}
+		sb.append("\n  }");
 		sb.append("\n}");
 		
 		return sb.toString();
@@ -79,12 +78,32 @@ public abstract class Participant<R extends Request> {
 	//
 	// general participant methods
 	//
+	
+	public void setParticipants(Set<Participant<R>> participants) {
+		this.participants = new HashMap<String, Participant<R>>();
+		this.upList = new TreeSet<Participant<R>>(new ParticipantComparator<R, Participant<R>>());
+		
+		for (Participant<R> p : participants) {
+			if (p != this) {
+				this.participants.put(p.getUid(), p);
+				this.upList.add(p);
+			}
+		}
+	}
+	
+	public Set<Participant<R>> getParticipants() {
+		return new HashSet<Participant<R>>(this.participants.values());
+	}
 
 	public void setUpList(SortedSet<Participant<R>> list){
 		if (list.contains(this)) {
 			list.remove(this);
 		}
 		this.upList = list;
+	}
+	
+	public SortedSet<Participant<R>> getUpList() {
+		return this.upList;
 	}
 	
 	public void setLog(Logger logger) {
@@ -102,26 +121,23 @@ public abstract class Participant<R extends Request> {
 	public String getUid() {
 		return this.uid;
 	}
-
-	public boolean isCoordinator() {
-		return this.isCoordinator;
-	}
-
-	public void setCoordinator(boolean isCoordinator) {
-		this.isCoordinator = isCoordinator;
-	}
 	
-	public void setAddressBook(Map<String, InetSocketAddress> addressBook) {
-		this.addressBook = addressBook;
-		if (this.addressBook.containsKey(this.getUid())) {
-			this.addressBook.remove(this.getUid());
-		}
-	}
-	
-	public int getRanking(){
+	public int getRanking() {
 		return this.ranking;
 	}
+
+	public boolean isCoordinator() {
+		return this.currentCoordinator == this;
+	}
 	
+	public void setCurrentCoordinator(Participant<R> newCoordinator) {
+		this.currentCoordinator = newCoordinator;
+	}
+	
+	public Participant<R> getCurrentCoordinator() {
+		return this.currentCoordinator;
+	}
+			
 	//
 	// methods for changing state
 	//
@@ -142,18 +158,23 @@ public abstract class Participant<R extends Request> {
 		}
 	}
 
-	public void sendMessage(String uid, MessageType messageType, R request) {
-		sendMessage(uid, this.addressBook.get(uid), messageType, request);
+	public boolean sendMessage(String uid, MessageType messageType, R request) {
+		if (!this.participants.containsKey(uid)) {
+			return false;
+		}
+		
+		return sendMessage(uid, this.participants.get(uid).getAddress(), messageType, request);
 	}
 	
-	public void sendMessage(String uid, InetSocketAddress address, MessageType messageType, R request) {
+	public boolean sendMessage(String uid, InetSocketAddress address, MessageType messageType, R request) {
 		try {
 			Socket server = new Socket(address.getAddress(), address.getPort());
-			Message.writeObject(server.getOutputStream(), 
-					new Message(messageType, getUid(), uid, System.currentTimeMillis(), request));
+			writeObject(server.getOutputStream(), 
+					new Message<R>(messageType, getUid(), uid, System.currentTimeMillis(),request));
 			server.close();
+			return true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			return false;
 		}
 	}
 	
@@ -176,32 +197,24 @@ public abstract class Participant<R extends Request> {
 		return m;
 	}
 	
-	private void writeObject(OutputStream stream, Message m) throws IOException {
+	private void writeObject(OutputStream stream, Message<R> m) throws IOException {
 		ObjectOutputStream oos = 
 			new ObjectOutputStream(stream);
 		oos.writeObject(m);
 		oos.close();
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
 		ObjectInputStream ois =
 			new ObjectInputStream(stream);
 		Object obj = ois.readObject();
 		ois.close();
 		
-		if(obj != null && obj instanceof Message) {
+		if(obj != null && obj instanceof Message<?>) {
 			return (Message<R>) obj;
 		} else {
 			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
 		}
 	}
-	
-	public Participant<R> getCoordintar(){
-		return coordinator;
-	}
-	
-	public Set<Participant<R>> getUpList(){
-		return upList;
-	}
-
 }
