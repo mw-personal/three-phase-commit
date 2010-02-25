@@ -1,12 +1,10 @@
 package tests;
 
+import transactionProtocol.TransactionManager;
 import applications.banking.BankingParticipant;
 import applications.banking.BankingRequest;
-import transactionProtocol.Participant;
-import transactionProtocol.Request;
-import transactionProtocol.TransactionManager;
 
-public class BankingClient implements Client {
+public class BankingClient implements Client<BankingRequest, BankingParticipant> {
 
 	private TransactionManager<BankingRequest, BankingParticipant> manager;
 	private BankingRequest request;
