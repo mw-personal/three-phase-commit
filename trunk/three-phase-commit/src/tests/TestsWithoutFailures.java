@@ -27,7 +27,6 @@ public class TestsWithoutFailures {
 	public static final int NUM_PARTICIPANTS = 4;
 	public static final int MANAGER_PORT = 8082;
 	
-	
 	private static TransactionManager<BankingRequest, BankingParticipant> transMan; // hehe
 	private static int testCount;
 	private static Set<String> usedAccountNames;
@@ -57,36 +56,36 @@ public class TestsWithoutFailures {
 	
 	@Before
 	public void testSetup() {
-		System.out.print("Running test #" + testCount++ + "........");
+		//System.out.print("Running test #" + testCount++ + "........");
 	}
 	
 	@After
 	public void testTearDown() {
-		System.out.println("finished!");
+		//System.out.println("finished!");
 	}
 
 	@Test
 	public void testCreateAccountValidAmount() {
 		// run this a few times to populate the database
-		for (int i = 0; i < 5; i++) {
+		//for (int i = 0; i < 5; i++) {
 			Assert.assertTrue(
-					sendRequestToManager(BankingRequestType.CREATE, freshAccountName(), 200*i));
-		}
+					sendRequestToManager(BankingRequestType.CREATE, freshAccountName(), 200));
+		//}
 	}
 	
-	@Test
+	//@Test
 	public void testCreateAccountInvalidAmount() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.CREATE, randomAccountName(), -200));
 	}
 	
-	@Test
+	//@Test
 	public void testCreateAccountAlreadyExists() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.CREATE, usedAccountName(), 1000));		
 	}
 	
-	@Test
+	//@Test
 	public void testDeleteAccount() {
 		String toDelete = usedAccountName();
 		Assert.assertTrue(
@@ -94,49 +93,49 @@ public class TestsWithoutFailures {
 		usedAccountNames.remove(toDelete);
 	}
 	
-	@Test
+	//@Test
 	public void testDeleteNonexistentAccount() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.DELETE, randomAccountName(), 0));
 	}
 	
-	@Test
+	//@Test
 	public void testDepositIntoAccountValidAmount() {
 		Assert.assertTrue(
 				sendRequestToManager(BankingRequestType.DEPOSIT, usedAccountName(), 1000));
 	}
 	
-	@Test
+	//@Test
 	public void testDepositIntoAccountInvalidAmount() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.DEPOSIT, usedAccountName(), -100));
 	}
 	
-	@Test
+	//@Test
 	public void testDepositIntoNonexistantAccount() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.DEPOSIT, randomAccountName(), 1000));		
 	}
 	
-	@Test
+	//@Test
 	public void testWithdrawFromAccountValidAmount() {
 		Assert.assertTrue(
 				sendRequestToManager(BankingRequestType.WITHDRAW, usedAccountName(), 1000));
 	}
 	
-	@Test
+	//@Test
 	public void testWithdrawFromAccountInvalidAmount() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.WITHDRAW, usedAccountName(), -100));
 	}
 	
-	@Test
+	//@Test
 	public void testWithdrawFromAccountWithInsufficientFunds() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.WITHDRAW, usedAccountName(), 100000000));
 	}
 	
-	@Test
+	//@Test
 	public void testWithdrawFromNonexistantAccount() {
 		Assert.assertFalse(
 				sendRequestToManager(BankingRequestType.WITHDRAW, randomAccountName(), 1000));		

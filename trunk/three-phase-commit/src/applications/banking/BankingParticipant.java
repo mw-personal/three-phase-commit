@@ -25,7 +25,7 @@ public class BankingParticipant extends ThreePhaseCommitParticipant<BankingReque
 	
 	@Override
 	public void abort(BankingRequest r) {
-		// TODO Auto-generated method stub
+		System.out.println(this.getUid() + ": aborted the following request, " + r);
 	}
 
 	@Override
@@ -51,6 +51,7 @@ public class BankingParticipant extends ThreePhaseCommitParticipant<BankingReque
 
 	@Override
 	public void commit(BankingRequest r) {
+		System.out.println(this.getUid() + ": commited the following request, " + r);
 		switch(r.getType()){
 		case CREATE:
 			accounts.put(r.getAccountName(), r.getAmount());
