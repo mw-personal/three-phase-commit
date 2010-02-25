@@ -1,18 +1,12 @@
 package transactionProtocol;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.Socket;
 
 public class Message<R extends Request> implements Serializable {
 	
 	private static final long serialVersionUID = -2723845472583508382L;
 
-	public enum MessageType{
+	public enum MessageType {
 		VOTE_REQ,
 		YES,
 		PRE_COMMIT,
@@ -23,14 +17,13 @@ public class Message<R extends Request> implements Serializable {
 		INITIATE,
 		FAIL,
 		ALIVE
-		}
+	}
 	
 	private MessageType type;
 	private String source;
 	private String dest;
 	private long timestamp;
 	private R request;
-	//private Class<? extends Request> requestType;
 	
 	public Message(MessageType type, String source, String dest, long timestamp, R r){
 		this.type = type;
@@ -38,7 +31,6 @@ public class Message<R extends Request> implements Serializable {
 		this.dest = dest;
 		this.timestamp = timestamp;
 		this.request = r;
-		//this.requestType = requestType;
 	}
 
 	public static long getSerialversionuid() {
@@ -77,25 +69,4 @@ public class Message<R extends Request> implements Serializable {
 		
 		return sb.toString();
 	}
-	
-	public static void writeObject(OutputStream stream, Message m) throws IOException {
-		ObjectOutputStream oos = 
-			new ObjectOutputStream(stream);
-		oos.writeObject(m);
-		oos.close();
-	}
-	
-	public Message<R> readObject(InputStream stream) throws IOException, ClassNotFoundException {
-		ObjectInputStream ois =
-			new ObjectInputStream(stream);
-		Object obj = ois.readObject();
-		ois.close();
-		
-		if(obj != null && obj instanceof Message) {
-			return (Message<R>) obj;
-		} else {
-			throw new ClassNotFoundException("Message.readObject: Objec read from stream was not of type Message");
-		}
-	}
-	
 }
