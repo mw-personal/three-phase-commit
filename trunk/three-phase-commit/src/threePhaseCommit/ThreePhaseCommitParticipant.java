@@ -1,7 +1,6 @@
 package threePhaseCommit;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -514,9 +513,5 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		}
 			
 		return par;
-	
-	private void coordinatorAbort(Message<R> message){
-		this.getLog().log(ABORT);
-		this.broadcastMessage(Message.MessageType.ABORT, message.getRequest());
 	}
 }
