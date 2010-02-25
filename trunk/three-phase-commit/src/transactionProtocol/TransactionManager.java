@@ -16,6 +16,8 @@ import loader.ParticipantThreadPool;
 
 import org.json.JSONException;
 
+import threePhaseCommit.ThreePhaseCommitParticipant;
+
 /**
  * The TransactionManager is responsible for initiating the RunnableParticipant threads
  * as well as communicating between the outside world and the Distributed System.
@@ -73,7 +75,7 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 	 * API for outside world to send a request to the DS.
 	 * @param request
 	 */
-	public synchronized boolean sendRequest(R request){
+	public synchronized boolean sendRequest(R request) {
 		System.out.println("TransactionManager: client request, " + request);
 		try{
 			Set<P> participants = launcher.getParticipants();
@@ -87,8 +89,16 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 				writeObject(server.getOutputStream(), init);
 				server.close();
 			}
-						
+								
 			boolean result = receiveMessage().getType() == Message.MessageType.COMMIT;
+			
+			try {
+				Thread.sleep(ThreePhaseCommitParticipant.TIMEOUT+1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			System.out.println("TransactionManager: coordinator decided to " + ((result) ? "COMMIT" : "ABORT") + " " + request);
 			return result;
 		} catch(IOException e){
