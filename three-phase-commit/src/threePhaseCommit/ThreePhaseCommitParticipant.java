@@ -3,19 +3,11 @@ package threePhaseCommit;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import logger.Logger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import transactionProtocol.Message;
-import transactionProtocol.MessageTimeoutException;
-import threePhaseCommit.ThreePhaseCommitTransactionManager.State;
 import transactionProtocol.Message;
 import transactionProtocol.MessageTimeoutException;
 import transactionProtocol.Participant;
@@ -71,7 +63,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		this.state = State.ABORTED;
 	}
 
-
 	@Override
 	public void startCommitProtocol() {
 		if (isCoordinator()) {
@@ -90,7 +81,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		}
 	}
 
-	public void startCoordinatorCommitProtocol() {
+	private void startCoordinatorCommitProtocol() {
 
 		Message<R> message = null;
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = ((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
@@ -229,7 +220,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					} else{
 						coordinatorAbort(message);
 					}
-					
+
 				} catch(ClassCastException e){
 					e.printStackTrace();
 					getLog().log(ABORT);
@@ -263,9 +254,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 				// we sit and wait for an intiate protocol message...forever.
 				try {
-					System.out.println(getUid() + " is waiting for an intialize message");
 					message = receiveMessage(INFINITE_TIMEOUT);
-					System.out.println(getUid() + " received an intialize message");
 				} catch (MessageTimeoutException e) { continue; }
 
 				switch(message.getType()) {
@@ -290,6 +279,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 								continue;
 							case VOTE_REQ: 
 								break;
+							case UR_ELECTED:
+								// TODO: omg what to do here.
+								continue;
 							default: 
 								continue;
 							}							
@@ -297,7 +289,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						}
 					} catch (MessageTimeoutException e) {
 						log.log(ABORT);
-						state = State.ABORTED;
+						this.state = State.ABORTED;
 						continue;
 					}					
 				
@@ -315,6 +307,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				case ALIVE:
 					handleResurrectedProcess(message.getSource());
 					continue;
+				case UR_ELECTED:
+					// TODO: omg what to do here?!
+					continue;
 				// everything else is ignored
 				default: 
 					continue;
@@ -323,7 +318,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				// cast our votes!
 				if (castVote(message.getRequest()).equals(Vote.YES)) {
 					log.log(YES);
-					state = State.UNCERTAIN;
+					this.state = State.UNCERTAIN;
 
 					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_BEFORE_SEND)) {
 						throw new InterruptedException();
@@ -350,7 +345,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 								handleFailedProcess(message.getSource());
 								continue;
 							case PRE_COMMIT: 
-								state = State.COMMITTABLE;
+								this.state = State.COMMITTABLE;
 
 								if (thread.isInterrupted(P_FAIL_BEFORE_ACK)) {
 									throw new InterruptedException();
@@ -378,13 +373,16 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 											continue;
 										case COMMIT: 
 											log.log(COMMIT);
-											state = State.COMMITTED;
+											this.state = State.COMMITTED;
 
 											if (thread.isInterrupted(P_FAIL_AFTER_COMMIT)) {
 												throw new InterruptedException();
 											}
 											
 											break;
+										case UR_ELECTED:
+											// TODO: omg what to do here?!
+											continue;
 										default: 
 											continue;
 										}
@@ -392,16 +390,16 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 										break;
 									}
 								} catch (MessageTimeoutException e) {
-									// initiate election protocol
-									// if elected then invoke coordinators algorithm
-									// else invoke participants algorithm
-									// return
+									startElectionProtocol(message.getRequest());
 								}
 								
 								break;
 							case ABORT:
 								log.log(ABORT);
 								state = State.ABORTED;
+								continue;
+							case UR_ELECTED:
+								// TODO: omg what to do here?!
 								continue;
 							default:
 								continue;
@@ -410,10 +408,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							break;
 						}
 					} catch (MessageTimeoutException e) {
-						// initiate election protocol
-						// if elected then invoke coordinators algorithm
-						// else invoke participants algorithm
-						// return
+						startElectionProtocol(message.getRequest());
 					} 	
 				} 
 
@@ -432,7 +427,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					}
 
 					log.log(ABORT);
-					state = State.ABORTED;
+					this.state = State.ABORTED;
 
 					if (thread.isInterrupted(P_FAIL_AFTER_ABORT)) {
 						throw new InterruptedException();
@@ -445,30 +440,80 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		} 
 		
 		catch (InterruptedException e) {
-			this.broadcastMessage(Message.MessageType.FAIL, null);
+			// TODO close p's socket and kill p's heartbeat monitor
+			// upon return the thread's run() method will finish in turn killing
+			// the thread
+			System.out.println("INTERRUPTED THIS THREAD!");
 			return;
 		}
 	}
 
-	public void startCoordinatorTerminationProtocol() {
+	private void startCoordinatorTerminationProtocol() {
 
 	}
 
-	public void startParticipantTerminationProtocol() {
+	@SuppressWarnings("unchecked")
+	private void startParticipantTerminationProtocol() {
+		Message<R> message;
+		Logger log = getLog();
 
+		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = 
+			((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
+
+		try {
+			// we sit and wait for a state-req
+			try {
+				message = receiveMessage(TIMEOUT);
+			} catch (MessageTimeoutException e) {
+			}
+		} finally {}
+	}
+	
+	private void startElectionProtocol(R request) {
+		Participant<R> newCoordinator = this.getUpList().first();
+		this.setCurrentCoordinator(newCoordinator);
+		
+		this.sendMessage(this.getCurrentCoordinator().getUid(), MessageType.UR_ELECTED, request);
+		this.startParticipantTerminationProtocol();
 	}
 	
 	private void handleResurrectedProcess(String uid) {
+		Participant<R> resurrectedParticipant = findParticipant(uid);
+		if (resurrectedParticipant == null) {
+			throw new IllegalStateException();
+		}
 		
+		// TODO: what to do here?!
 	}
 	
 	private void handleFailedProcess(String uid) {
-		
+		Participant<R> failedParticipant = findParticipant(uid);
+		if (failedParticipant == null) {
+			throw new IllegalStateException();
+		}
+				
+		this.getUpList().remove(failedParticipant);
 	}
-	
+		
 	private void handleAbortMessage(String uid){
 		
 	}
+		
+	private void coordinatorAbort(Message<R> message){
+		this.getLog().log(ABORT);
+		this.broadcastMessage(Message.MessageType.ABORT, message.getRequest());
+	}
+	
+	private Participant<R> findParticipant(String uid) {
+		Participant<R> par = null;
+		for (Participant<R> p : this.getParticipants()) {
+			if (p.getUid().equals(uid)) {
+				par = p;
+				break;
+			}
+		}
+			
+		return par;
 	
 	private void coordinatorAbort(Message<R> message){
 		this.getLog().log(ABORT);
