@@ -29,43 +29,43 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	private static final int INFINITE_TIMEOUT = 0;
 
 	// Log types
-	private static final String ABORT = "ABORT";
-	private static final String COMMIT = "COMMIT";
-	private static final String YES = "YES";
-	private static final String NO = "NO";
-	private static final String START = "START-3PC";
+	public static final String ABORT = "ABORT";
+	public static final String COMMIT = "COMMIT";
+	public static final String YES = "YES";
+	public static final String NO = "NO";
+	public static final String START = "START-3PC";
 
 	// Participant points to fail
-	private static final String P_FAIL_BEFORE_INIT = "Participant-Fail-Before-Init";
-	private static final String P_FAIL_BEFORE_VOTE_REQ = "Participant-Fail-Before-Vote-Req";
-	private static final String P_FAIL_AFTER_VOTE_REQ = "Participant-Fail-After-Vote-Req";
-	private static final String P_FAIL_AFTER_VOTE_BEFORE_SEND = "Participant-Fail-After-Vote-Before-Send";
-	private static final String P_FAIL_AFTER_VOTE_AFTER_SEND = "Participant-Fail-After-Vote-After-Send";
-	private static final String P_FAIL_BEFORE_ACK = "Participant-Fail-Before-Ack";
-	private static final String P_FAIL_AFTER_ACK = "Participant-Fail-After-Ack";
-	private static final String P_FAIL_AFTER_COMMIT = "Participant-Fail-After-Commit";
-	private static final String P_FAIL_AFTER_ABORT = "Participant-Fail-After-Abort";
+	public static final String P_FAIL_BEFORE_INIT = "Participant-Fail-Before-Init";
+	public static final String P_FAIL_BEFORE_VOTE_REQ = "Participant-Fail-Before-Vote-Req";
+	public static final String P_FAIL_AFTER_VOTE_REQ = "Participant-Fail-After-Vote-Req";
+	public static final String P_FAIL_AFTER_VOTE_BEFORE_SEND = "Participant-Fail-After-Vote-Before-Send";
+	public static final String P_FAIL_AFTER_VOTE_AFTER_SEND = "Participant-Fail-After-Vote-After-Send";
+	public static final String P_FAIL_BEFORE_ACK = "Participant-Fail-Before-Ack";
+	public static final String P_FAIL_AFTER_ACK = "Participant-Fail-After-Ack";
+	public static final String P_FAIL_AFTER_COMMIT = "Participant-Fail-After-Commit";
+	public static final String P_FAIL_AFTER_ABORT = "Participant-Fail-After-Abort";
 
 	// Coordinator points to fail
-	private static final String C_FAIL_BEFORE_INIT = "Coordinator-Fail-Before-Init";
-	private static final String C_FAIL_BEFORE_VOTE_REQ = "Coordinator-Fail-Before-Vote-Req";
-	private static final String C_FAIL_AFTER_VOTE_REQ = "Coordinator-Fail-After-Vote-Req";
-	private static final String C_FAIL_BEFORE_PRE_COMMIT = "Coordinator-Fail-Before-Pre-Commit";
-	private static final String C_FAIL_AFTER_PRE_COMMIT = "Coordinator-Fail-After-Pre-Commit";
-	private static final String C_FAIL_AFTER_COMMIT_BEFORE_SEND = "Coordinator-Fail-After-Commit-Before-Send";
-	private static final String C_FAIL_AFTER_COMMIT_AFTER_SEND = "Coordinator-Fail-After-Commit-After-Send";
-	private static final String C_FAIL_AFTER_ABORT_BEFORE_SEND = "Coordinator-Fail-After-Abort-Before-Send";
-	private static final String C_FAIL_AFTER_ABORT_AFTER_SEND = "Coordinator-Fail-After-Abort-Before-Send";
+	public static final String C_FAIL_BEFORE_INIT = "Coordinator-Fail-Before-Init";
+	public static final String C_FAIL_BEFORE_VOTE_REQ = "Coordinator-Fail-Before-Vote-Req";
+	public static final String C_FAIL_AFTER_VOTE_REQ = "Coordinator-Fail-After-Vote-Req";
+	public static final String C_FAIL_BEFORE_PRE_COMMIT = "Coordinator-Fail-Before-Pre-Commit";
+	public static final String C_FAIL_AFTER_PRE_COMMIT = "Coordinator-Fail-After-Pre-Commit";
+	public static final String C_FAIL_AFTER_COMMIT_BEFORE_SEND = "Coordinator-Fail-After-Commit-Before-Send";
+	public static final String C_FAIL_AFTER_COMMIT_AFTER_SEND = "Coordinator-Fail-After-Commit-After-Send";
+	public static final String C_FAIL_AFTER_ABORT_BEFORE_SEND = "Coordinator-Fail-After-Abort-Before-Send";
+	public static final String C_FAIL_AFTER_ABORT_AFTER_SEND = "Coordinator-Fail-After-Abort-Before-Send";
 
 	// Participant termination protocol points to fail
-	private static final String T_P_FAIL_BEFORE_STATE_REQ = "T-Participant-Fail-Before-State-Req";
-	private static final String T_P_FAIL_AFTER_SEND_STATE = "T-Participant-Fail-After-Send-State";
-	private static final String T_P_FAIL_AFTER_ACK = "T-Participant-Fail-After-Ack";
+	public static final String T_P_FAIL_BEFORE_STATE_REQ = "T-Participant-Fail-Before-State-Req";
+	public static final String T_P_FAIL_AFTER_SEND_STATE = "T-Participant-Fail-After-Send-State";
+	public static final String T_P_FAIL_AFTER_ACK = "T-Participant-Fail-After-Ack";
 	
 	// Coordinator termination protocol points to fail
-	private static final String T_C_FAIL_BEFORE_STATE_REQ = "T-Coordinator-Fail-Before-State-Request";
-	private static final String T_C_FAIL_AFTER_STATE_REQ = "T-Coordinator-Fail-After-State-Request";
-	private static final String T_C_FAIL_AFTER_PRE_COMMIT = "T-Coordinator-Fail-After-Pre-Commit";
+	public static final String T_C_FAIL_BEFORE_STATE_REQ = "T-Coordinator-Fail-Before-State-Request";
+	public static final String T_C_FAIL_AFTER_STATE_REQ = "T-Coordinator-Fail-After-State-Request";
+	public static final String T_C_FAIL_AFTER_PRE_COMMIT = "T-Coordinator-Fail-After-Pre-Commit";
 	
 	
 	private State state;
