@@ -23,12 +23,13 @@ import applications.banking.BankingParticipant;
 import applications.banking.BankingRequest;
 import applications.banking.BankingRequest.BankingRequestType;
 
-public class TestsWithFailures {
+public class TestsWithParticipantFailures {
 
 	public static final String CONFIG_FILE = "TestsWithFailures.txt";
 	public static final int NUM_PARTICIPANTS = 4;
 	public static final int MANAGER_PORT = 8080;
 	
+	private static ParticipantThread<BankingRequest, BankingParticipant> failingThread;
 	private static ParticipantThreadPool<BankingRequest, BankingParticipant> tpool;
 	private static TransactionManager<BankingRequest, BankingParticipant> transMan; // hehe
 	private static int testCount;
@@ -49,6 +50,14 @@ public class TestsWithFailures {
 					BankingParticipant.class, tpool,
 					new InetSocketAddress(MANAGER_PORT));
 			transMan.initParticipants();
+			
+			// find a thread that is not the coordinator
+			for (ParticipantThread<BankingRequest, BankingParticipant> p : tpool.getParticipantThreads().values()) {
+				if (!p.getParticipant().isCoordinator()) {
+					failingThread = p;
+					break;
+				}
+			}
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -61,6 +70,7 @@ public class TestsWithFailures {
 	
 	@After
 	public void testTearDown() {
+		Assert.assertTrue(transMan.assertEqualState());
 		System.out.println("Completed test #" + testCount++);
 	}
 
@@ -73,19 +83,40 @@ public class TestsWithFailures {
 		}
 	}
 	
-	@Test
-	public void testCreateAccountWithOneFailure() {
-		// find a thread that is not the coordinator
-		for (ParticipantThread<BankingRequest, BankingParticipant> p : tpool.getParticipantThreads().values()) {
-			if (!p.getParticipant().isCoordinator()) {
-				p.setPointToFail(ThreePhaseCommitParticipant.P_FAIL_BEFORE_VOTE_REQ);
-				break;
-			}
-		}
-		
+	//@Test
+	public void testCreateAccountFailBeforeVoteReq() {
+		failingThread.setPointToFail(ThreePhaseCommitParticipant.P_FAIL_BEFORE_VOTE_REQ);
 		Assert.assertFalse(
 					sendRequestToManager(BankingRequestType.CREATE, randomAccountName(), 200));
 	}
+	
+	//@Test
+	public void testCreateAccountFailAfterVoteBeforeSend() {
+		failingThread.setPointToFail(ThreePhaseCommitParticipant.P_FAIL_AFTER_VOTE_BEFORE_SEND);
+		Assert.assertFalse(
+					sendRequestToManager(BankingRequestType.CREATE, randomAccountName(), 200));
+	}
+	
+	//@Test
+	public void testCreateAccountFailAfterVoteAfterSend() {
+		failingThread.setPointToFail(ThreePhaseCommitParticipant.P_FAIL_AFTER_VOTE_AFTER_SEND);
+		Assert.assertTrue(
+					sendRequestToManager(BankingRequestType.CREATE, randomAccountName(), 200));
+	}
+	
+	@Test
+	public void testCreateAccountFailAfterAck() {
+		failingThread.setPointToFail(ThreePhaseCommitParticipant.P_FAIL_AFTER_ACK);
+		Assert.assertTrue(
+					sendRequestToManager(BankingRequestType.CREATE, randomAccountName(), 200));
+	}
+	
+	//@Test
+	public void testCreateAccountFailAfterCommit() {
+		failingThread.setPointToFail(ThreePhaseCommitParticipant.P_FAIL_AFTER_COMMIT);
+		Assert.assertTrue(
+					sendRequestToManager(BankingRequestType.CREATE, randomAccountName(), 200));
+	}	
 	
 	//@Test
 	public void testCreateAccountAlreadyExists() {

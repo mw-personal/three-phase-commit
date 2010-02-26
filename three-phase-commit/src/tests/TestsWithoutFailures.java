@@ -14,7 +14,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-//import loader.ParticipantConfiguration;
+import loader.ParticipantConfiguration;
 import transactionProtocol.TransactionManager;
 import applications.banking.BankingParticipant;
 import applications.banking.BankingRequest;
@@ -33,8 +33,8 @@ public class TestsWithoutFailures {
 
 	@BeforeClass
 	public static void classSetup() throws IOException {
-		//ParticipantConfiguration.generateParticipantConfigurationFile(
-		//		NUM_PARTICIPANTS, 9000, CONFIG_FILE);
+		ParticipantConfiguration.generateParticipantConfigurationFile(
+				NUM_PARTICIPANTS, 9000, CONFIG_FILE);
 
 		try {
 			testCount = 0;
@@ -55,6 +55,7 @@ public class TestsWithoutFailures {
 	
 	@After
 	public void testTearDown() {
+		Assert.assertTrue(transMan.assertEqualState());
 		System.out.println("Completed test #" + testCount++);
 	}
 

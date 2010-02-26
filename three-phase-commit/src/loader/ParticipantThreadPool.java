@@ -112,4 +112,16 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 			t.interrupt();
 		}
 	}
+	
+	public boolean assertEqualState() {
+		for(P p : this.participantMap.values()) {
+			for (P p2 : this.participantMap.values()) {
+				if (!p.equals(p2)) {
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
 }
