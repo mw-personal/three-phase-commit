@@ -244,7 +244,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				}
 			}
 		} catch (InterruptedException e) {
-			System.out.println("INTERRUPTED THIS THREAD!");
 			this.broadcastMessage(Message.MessageType.FAIL, null);
 			return;
 		}
@@ -478,7 +477,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 			// TODO close p's socket and kill p's heartbeat monitor
 			// upon return the thread's run() method will finish in turn killing
 			// the thread
-			System.out.println("INTERRUPTED THIS THREAD!");
 			this.broadcastMessage(Message.MessageType.FAIL, null);
 			return;
 		}
