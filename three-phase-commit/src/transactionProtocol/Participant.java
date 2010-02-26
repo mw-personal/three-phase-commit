@@ -218,11 +218,6 @@ public abstract class Participant<R extends Request> {
 		return m;
 	}
 	
-	protected void resetInboxSocket() throws IOException {
-		this.inbox.close();
-		this.inbox = new ServerSocket(this.address.getPort());
-	}
-	
 	private void writeObject(OutputStream stream, Message<R> m) throws IOException {
 		ObjectOutputStream oos = 
 			new ObjectOutputStream(stream);

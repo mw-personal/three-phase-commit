@@ -94,15 +94,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 		try {
 			intial_state: while (true) {
-				// reset our inbox socket
-				// TODO: im trying to think of a wayt o flush. this may or may
-				// not work!
-				try {
-					this.resetInboxSocket();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-
+				
 				log.log("WAITING FOR INTIALIZE");
 
 				// wait for initialization
