@@ -48,11 +48,7 @@ public class TransactionLogger implements Logger {
 	public String getFilePath() {
 		return this.filePath;
 	}
-	
-	public boolean clear() {
-		return false;
-	}
-	
+		
 	public boolean close() {
 		try {
 			this.writer.close();
@@ -65,7 +61,7 @@ public class TransactionLogger implements Logger {
 
 	public boolean log(String data) {
 		try {
-			this.writer.write(data + "\n");
+			this.writer.write(System.currentTimeMillis() + ":" + data + "\n");
 			this.writer.flush();
 		} catch (IOException e) {
 			return false;

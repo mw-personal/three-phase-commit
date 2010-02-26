@@ -28,7 +28,10 @@ public class ParticipantThread<R extends Request, P extends Participant<R>> exte
 		switch(participant.getExecutionState()) {
 		case FAILED:
 			participant.setExecutionState(ExecutionState.RECOVERING);
-			//participant.startRecoveryProtocol();
+			participant.startRecoveryFromFailure();
+			participant.setExecutionState(ExecutionState.STARTED);
+			participant.startCommitProtocol();
+			break;
 		case READY:
 			participant.setExecutionState(ExecutionState.STARTED);
 			participant.startCommitProtocol();

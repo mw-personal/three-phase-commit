@@ -48,6 +48,7 @@ public abstract class Participant<R extends Request> {
 		this.ranking = ranking;
 		this.currentCoordinator = null;
 		this.defaultVote = defaultVote;
+		this.executionState = ExecutionState.READY;
 
 		// address for TCP messaging
 		this.address = address;
@@ -163,6 +164,7 @@ public abstract class Participant<R extends Request> {
 	public abstract void commit(R r);
 	public abstract void startCommitProtocol();
 	protected abstract void startTerminationProtocol(R r);
+	protected abstract void startRecoveryFromFailure();
 
 	//
 	// methods for sending/receiving data

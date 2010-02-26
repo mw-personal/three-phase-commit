@@ -12,6 +12,7 @@ public class BankingRequest implements Request {
 	// address and inbox for process making request
 	private InetSocketAddress address; 
 	private ServerSocket inbox;
+	private int requestId;
 	
 	public enum BankingRequestType {
 		CREATE,
@@ -24,12 +25,17 @@ public class BankingRequest implements Request {
 	private String accountName;
 	private double amount;
 	
-	public BankingRequest(BankingRequestType type, String accountName, double amount) {
+	public BankingRequest(int id, BankingRequestType type, String accountName, double amount) {
 		this.type = type;
 		this.accountName = accountName;
 		this.amount = amount;
+		this.requestId = id;
 	}
 
+	public int getRequestId() {
+		return this.requestId;
+	}
+	
 	public BankingRequestType getType() {
 		return type;
 	}
@@ -47,7 +53,7 @@ public class BankingRequest implements Request {
 	}
 		
 	public String toString() {
-		return "{" + type + ":" + accountName + ":" + amount + "}";
+		return "{" + requestId + ":" + type + ":" + accountName + ":" + amount + "}";
 	}
 
 	public InetSocketAddress getAddress() {

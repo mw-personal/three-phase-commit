@@ -42,17 +42,13 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		this.inbox = new ServerSocket(address.getPort());
 		this.address = address;
 	}
-	
-	
-	
+		
 	@Override
 	protected void finalize() throws Throwable {
 		// TODO Auto-generated method stub
 		this.inbox.close();
 		super.finalize();
 	}
-
-
 
 	public void initParticipants() {
 		SortedSet<P> sortedParticipants = new TreeSet<P>(new ParticipantComparator<R, P>());
@@ -70,11 +66,7 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		
 		this.launcher.start();
 	}
-	
-	/**
-	 * API for outside world to send a request to the DS.
-	 * @param request
-	 */
+
 	public synchronized boolean sendRequest(R request) {
 		System.out.println("TransactionManager: client request, " + request);
 		try{
