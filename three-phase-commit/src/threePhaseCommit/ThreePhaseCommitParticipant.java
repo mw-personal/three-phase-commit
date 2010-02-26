@@ -248,7 +248,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 		try {
 
-			intial_state: while (true) {
+			initial_state: while (true) {
 				
 				log.log("WAITING FOR INTIALIZE");
 
@@ -260,14 +260,14 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				try {
 					message = this.receiveMessage(INFINITE_TIMEOUT);
 				} catch (MessageTimeoutException e) {
-					continue intial_state;
+					continue initial_state;
 				}
 
 				MessageType mtype = message.getType();
 				if (mtype == MessageType.INITIATE) {
 					request = message.getRequest();
 					// wait for vote-request
-					if (thread.isInterrupted(P_FAIL_BEFORE_VOTE_REQ)) {
+					if (thread.isInterrupted(P_FAIL_BEFORE_VOTE_REQ)) { 
 						throw new InterruptedException();
 					}
 
@@ -285,6 +285,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 								break;
 							} else if (mtype == MessageType.UR_ELECTED) {
 								// TODO: omg what to do here.
+								this.removeCoordinatorFromUpList();
+								this.startCoordinatorTerminationProtocol(request);
+								continue initial_state;
 							}
 						}
 					} catch (MessageTimeoutException e) {
@@ -292,8 +295,8 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						this.state = State.ABORTED;
 						this.abort(message.getRequest());
 
-						// return to intialstate
-						continue intial_state;
+						// return to initialstate
+						continue initial_state;
 					}
 				} else if (mtype == MessageType.VOTE_REQ) {
 					// nothing to do here!
@@ -301,16 +304,19 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				} else if (mtype == MessageType.FAIL) {
 					this.handleFailedProcess(message.getSource());
 					log.log(message.toString());
-					continue intial_state;
+					continue initial_state;
 				} else if (mtype == MessageType.ALIVE) {
 					this.handleResurrectedProcess(message.getSource());
 					log.log(message.toString());
-					continue intial_state;
+					continue initial_state;
 				} else if (mtype == MessageType.UR_ELECTED) {
 					// TODO: omg what to do here?!
+					this.removeCoordinatorFromUpList();
+					this.startCoordinatorTerminationProtocol(request);
+					continue initial_state;
 				} else {
 					log.log(message.toString());
-					continue intial_state;
+					continue initial_state;
 				}
 
 				// cast our votes!
@@ -346,9 +352,12 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 								log.log(ABORT);
 								this.state = State.ABORTED;
 								this.abort(request);
-								continue intial_state;
+								continue initial_state;
 							} else if (mtype == MessageType.UR_ELECTED) {
 								// TODO: omg what to do here?!
+								this.removeCoordinatorFromUpList();
+								this.startCoordinatorTerminationProtocol(request);
+								continue initial_state;
 							} else if (mtype == MessageType.PRE_COMMIT) {
 								this.state = State.COMMITTABLE;
 
@@ -387,18 +396,35 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 											}
 
 											// commited, now back to initialize!
-											continue intial_state;
+											continue initial_state;
 										} else if (mtype == MessageType.UR_ELECTED) {
 											// TODO: omg what to do here?!
+											this.removeCoordinatorFromUpList();
+											this.startCoordinatorTerminationProtocol(request);
+											continue initial_state;
 										}
 									}
 								} catch (MessageTimeoutException e) {
+									this.removeCoordinatorFromUpList();
 									this.startElectionProtocol(request);
+									if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+										this.startCoordinatorTerminationProtocol(request);
+									} else{
+										this.startParticipantTerminationProtocol(request);
+									}
+									continue initial_state;
 								}
 							}
 						}
 					} catch (MessageTimeoutException e) {
+						this.removeCoordinatorFromUpList();
 						this.startElectionProtocol(request);
+						if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+							this.startCoordinatorTerminationProtocol(request);
+						} else{
+							this.startParticipantTerminationProtocol(request);
+						}
+						continue initial_state;
 					}
 				}
 
@@ -533,16 +559,68 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	}
 
 	private void startParticipantTerminationProtocol(R request) {
-		System.out.println("omg");
+		Message<R> message = null;
+		MessageType mType = null;
+		MessageType stateType = null;
+		/**
+		 * Wait for STATE-REQ
+		 */
+		try{
+			// Spin until receiving State_Request from coordinator
+			while(true){
+				try{
+					message = this.receiveMessage(TIMEOUT);
+				} catch(MessageTimeoutException e){
+					this.removeCoordinatorFromUpList();
+					this.startElectionProtocol(request);
+					if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+						this.startCoordinatorTerminationProtocol(request);
+					} else{
+						this.startParticipantTerminationProtocol(request);
+					}
+				}
+				mType = message.getType();
+				if(mType.equals(MessageType.STATE_REQ)){
+					switch(this.state){
+						case ABORTED: 		stateType = MessageType.ABORTED;
+													break;
+						case COMMITTABLE:		stateType = MessageType.COMMITTABLE;
+													break;
+						case COMMITTED:		stateType = MessageType.COMMITTED;
+													break;
+						case UNCERTAIN:		stateType = MessageType.UNCERTAIN;
+					}
+					this.sendMessage(this.getCurrentCoordinator().getUid(), stateType, request);
+				} else if (mType == MessageType.FAIL) {
+					this.handleFailedProcess(message.getSource());
+				} else if(mType == MessageType.UR_ELECTED){
+					this.removeCoordinatorFromUpList();
+					this.startCoordinatorTerminationProtocol(request);
+					return;
+				}
+			}
+			
+			
+			
+			
+		} catch(InterruptedException e){
+			
+		}
+		
+		
 	}
 
+	private void removeCoordinatorFromUpList(){
+		if(this.getCurrentCoordinator().getUid() != this.getUid())
+			this.getUpList().remove(this.getCurrentCoordinator());
+	}
+	
 	private void startElectionProtocol(R request) {
 		Participant<R> newCoordinator = this.getUpList().first();
 		this.setCurrentCoordinator(newCoordinator);
-
+		
 		this.sendMessage(this.getCurrentCoordinator().getUid(),
 				MessageType.UR_ELECTED, request);
-		this.startParticipantTerminationProtocol(request);
 	}
 
 	private void handleResurrectedProcess(String uid) {
