@@ -286,6 +286,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							} else if (mtype == MessageType.UR_ELECTED) {
 								// TODO: omg what to do here.
 								this.removeCoordinatorFromUpList();
+								this.setCurrentCoordinator(this);
 								this.startCoordinatorTerminationProtocol(request);
 								continue initial_state;
 							}
@@ -312,6 +313,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				} else if (mtype == MessageType.UR_ELECTED) {
 					// TODO: omg what to do here?!
 					this.removeCoordinatorFromUpList();
+					this.setCurrentCoordinator(this);
 					this.startCoordinatorTerminationProtocol(request);
 					continue initial_state;
 				} else {
@@ -356,6 +358,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							} else if (mtype == MessageType.UR_ELECTED) {
 								// TODO: omg what to do here?!
 								this.removeCoordinatorFromUpList();
+								this.setCurrentCoordinator(this);
 								this.startCoordinatorTerminationProtocol(request);
 								continue initial_state;
 							} else if (mtype == MessageType.PRE_COMMIT) {
@@ -400,6 +403,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 										} else if (mtype == MessageType.UR_ELECTED) {
 											// TODO: omg what to do here?!
 											this.removeCoordinatorFromUpList();
+											this.setCurrentCoordinator(this);
 											this.startCoordinatorTerminationProtocol(request);
 											continue initial_state;
 										}
@@ -591,19 +595,40 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						case UNCERTAIN:		stateType = MessageType.UNCERTAIN;
 					}
 					this.sendMessage(this.getCurrentCoordinator().getUid(), stateType, request);
+					break;
 				} else if (mType == MessageType.FAIL) {
 					this.handleFailedProcess(message.getSource());
 				} else if(mType == MessageType.UR_ELECTED){
 					this.removeCoordinatorFromUpList();
+					this.setCurrentCoordinator(this);
 					this.startCoordinatorTerminationProtocol(request);
 					return;
+				} else if (mType == MessageType.ALIVE){
+					this.handleResurrectedProcess(message.getSource());
+				} else{
+					// TODO:  Any other cases to handle?
+				}
+			}
+			
+			/**
+			 * Wait for response from coordinator
+			 */
+			while(true){
+				try{
+					message = this.receiveMessage(TIMEOUT);
+				} catch(MessageTimeoutException e){
+					this.removeCoordinatorFromUpList();
+					this.startElectionProtocol(request);
+					if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+						this.startCoordinatorTerminationProtocol(request);
+					} else{
+						this.startParticipantTerminationProtocol(request);
+					}
 				}
 			}
 			
 			
-			
-			
-		} catch(InterruptedException e){
+		} catch(Exception e){
 			
 		}
 		
