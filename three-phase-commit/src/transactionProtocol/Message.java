@@ -18,7 +18,11 @@ public class Message<R extends Request> implements Serializable {
 		FAIL,
 		ALIVE,
 		UR_ELECTED,
-		STATE_REQ
+		STATE_REQ,
+		ABORTED,
+		COMMITTED,
+		UNCERTAIN,
+		COMMITTABLE
 	}
 	
 	private MessageType type;

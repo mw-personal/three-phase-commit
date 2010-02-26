@@ -114,6 +114,10 @@ public abstract class Participant<R extends Request> {
 	public Logger getLog() {
 		return this.logger;
 	}
+	
+	public String getDefaultVote() {
+		return this.defaultVote;
+	}
 
 	public InetSocketAddress getAddress() {
 		return this.address;
@@ -147,14 +151,19 @@ public abstract class Participant<R extends Request> {
 	public abstract Vote castVote(R r);
 	public abstract void commit(R r);
 	public abstract void startCommitProtocol();
-	public abstract void startTerminationProtocol();
+	protected abstract void startTerminationProtocol(R r);
 
 	//
 	// methods for sending/receiving data
 	//
 
+	
 	public void broadcastMessage(MessageType messageType, R request) {
-		for (Participant<R> p : this.upList) {
+		this.broadcastMessage(this.getUpList(), messageType, request);
+	}
+	
+	public void broadcastMessage(Set<Participant<R>> recipients, MessageType messageType, R request) {
+		for (Participant<R> p : recipients) {
 			sendMessage(p.getUid(), messageType, request);
 		}
 	}
