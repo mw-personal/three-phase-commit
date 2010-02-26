@@ -30,6 +30,12 @@ public class BankingParticipant extends ThreePhaseCommitParticipant<BankingReque
 
 	@Override
 	public Vote castVote(BankingRequest r) {
+		if (this.getDefaultVote().equals("YES")) {
+			return Vote.YES;
+		} else if (this.getDefaultVote().equals("NO")) {
+			return Vote.NO;
+		}
+		
 		// this does not actually perform the action!
 		boolean hasAccount = accounts.containsKey(r.getAccountName());
 		
