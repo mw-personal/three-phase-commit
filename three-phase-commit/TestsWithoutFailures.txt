@@ -6,7 +6,7 @@
         "log-file": "logs/mylogfile0.txt",
         "point-to-fail": "",
         "ranking": 0,
-        "uid": "a0ad2bb6-f4a1-4663-82aa-7d0d94600b7d"
+        "uid": "98f52c8c-ba65-4def-acfa-0d10643fa21f"
     },
     {
         "default-vote": "?",
@@ -15,7 +15,7 @@
         "log-file": "logs/mylogfile1.txt",
         "point-to-fail": "",
         "ranking": 1,
-        "uid": "17d2069a-c119-49ef-9111-075b34df9c4e"
+        "uid": "56228db5-b0e2-486d-a650-547350abcdff"
     },
     {
         "default-vote": "?",
@@ -24,7 +24,7 @@
         "log-file": "logs/mylogfile2.txt",
         "point-to-fail": "",
         "ranking": 2,
-        "uid": "470f6666-8096-4621-8836-12dcbe490b30"
+        "uid": "5d7cdb9e-7948-4b25-997d-57908e8cedbf"
     },
     {
         "default-vote": "?",
@@ -33,6 +33,6 @@
         "log-file": "logs/mylogfile3.txt",
         "point-to-fail": "",
         "ranking": 3,
-        "uid": "4ef3fc2f-e9bd-43fa-9b9b-3dedfb41f016"
+        "uid": "fd55df37-921b-432f-a9d5-b121234594e8"
     }
 ]}

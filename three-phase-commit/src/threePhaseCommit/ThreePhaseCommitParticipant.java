@@ -25,7 +25,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	};
 
 	// Timeouts
-	public static int TIMEOUT = 1000;
+	public static int TIMEOUT = 0;
 	private static final int INFINITE_TIMEOUT = 0;
 
 	// Log types
@@ -112,7 +112,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 			intial_state: while (true) {
 				handleResurrectedSet(resurrectedSet);
 				resurrectedSet = new TreeSet<Participant<R>>();
-				log.log("WAITING FOR INTIALIZE");
 
 				// wait for initialization
 				if (thread.isInterrupted(C_FAIL_BEFORE_INIT)) {
@@ -269,7 +268,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				
 				handleResurrectedSet(resurrectedSet);
 				resurrectedSet = new TreeSet<Participant<R>>();
-				log.log("WAITING FOR INTIALIZE");
 
 				if (thread.isInterrupted(P_FAIL_BEFORE_INIT)) {
 					throw new InterruptedException();
@@ -323,11 +321,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					request = message.getRequest();
 				} else if (mtype == MessageType.FAIL) {
 					this.handleFailedProcess(message.getSource());
-					log.log(message.toString());
 					continue initial_state;
 				} else if (mtype == MessageType.ALIVE) {
 					this.handleResurrectedProcess(message.getSource(), resurrectedSet);
-					log.log(message.toString());
 					continue initial_state;
 				} else if (mtype == MessageType.UR_ELECTED) {
 					// TODO: omg what to do here?!
@@ -336,7 +332,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 					continue initial_state;
 				} else {
-					log.log(message.toString());
 					continue initial_state;
 				}
 
