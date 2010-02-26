@@ -587,12 +587,13 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		Message<R> message = null;
 		MessageType mType = null;
 		MessageType stateType = null;
+		boolean processed = false;
 		/**
 		 * Wait for STATE-REQ
 		 */
 		try{
 			// Spin until receiving State_Request from coordinator
-			while(true){
+			while(!processed){
 				try{
 					message = this.receiveMessage(TIMEOUT);
 				} catch(MessageTimeoutException e){
@@ -603,6 +604,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					} else{
 						this.startParticipantTerminationProtocol(request);
 					}
+					return;
 				}
 				mType = message.getType();
 				if(mType.equals(MessageType.STATE_REQ)){
@@ -616,7 +618,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						case UNCERTAIN:		stateType = MessageType.UNCERTAIN;
 					}
 					this.sendMessage(this.getCurrentCoordinator().getUid(), stateType, request);
-					break;
+					processed = true;
 				} else if (mType == MessageType.FAIL) {
 					this.handleFailedProcess(message.getSource());
 				} else if(mType == MessageType.UR_ELECTED){
@@ -634,7 +636,8 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 			/**
 			 * Wait for response from coordinator
 			 */
-			while(true){
+			processed = false;
+			while(!processed){
 				try{
 					message = this.receiveMessage(TIMEOUT);
 				} catch(MessageTimeoutException e){
@@ -655,7 +658,12 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		
 		
 	}
-
+	
+	private void removeCoordinatorFromUpList(){
+		if(this.getCurrentCoordinator().getUid() != this.getUid())
+			this.getUpList().remove(this.getCurrentCoordinator());
+	}
+	
 	protected void startRecoveryFromFailure() {
 		// TODO Auto-generated method stub
 		
