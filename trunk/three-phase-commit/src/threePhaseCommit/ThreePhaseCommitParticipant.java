@@ -3,6 +3,7 @@ package threePhaseCommit;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +37,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	// Participant points to fail
 	private static final String P_FAIL_BEFORE_INIT = "Participant-Fail-Before-Init";
 	private static final String P_FAIL_BEFORE_VOTE_REQ = "Participant-Fail-Before-Vote-Req";
+	private static final String P_FAIL_AFTER_VOTE_REQ = "Participant-Fail-After-Vote-Req";
 	private static final String P_FAIL_AFTER_VOTE_BEFORE_SEND = "Participant-Fail-After-Vote-Before-Send";
 	private static final String P_FAIL_AFTER_VOTE_AFTER_SEND = "Participant-Fail-After-Vote-After-Send";
 	private static final String P_FAIL_BEFORE_ACK = "Participant-Fail-Before-Ack";
@@ -87,7 +89,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		Message<R> message = null;
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = 
 			((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
-		List<String> yesVotes;
+		Set<Participant<R>> yesVotes;
 		boolean decision;
 		Logger log = this.getLog();
 		R request = null;
@@ -132,23 +134,22 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				}
 
 				decision = true;
-				yesVotes = new ArrayList<String>();
+				yesVotes = new HashSet<Participant<R>>();
 
 				int upSize = this.getUpList().size();
-				int votesReceived = upSize - 1; // subtract one, because we
-												// exist in our own uplist
+				int votesReceived = upSize - 1;
 
 				while (votesReceived != 0) {
 					try {
 						message = this.receiveMessage(TIMEOUT);
 					} catch (MessageTimeoutException e) {
-						this.coordinatorAbort(request);
-						continue intial_state;
+						decision = false;
+						votesReceived--;
 					}
 
 					mtype = message.getType();
 					if (mtype == MessageType.YES) {
-						yesVotes.add(message.getSource());
+						yesVotes.add(findParticipant(message.getSource()));
 						votesReceived--;
 					} else if (mtype == MessageType.NO) {
 						decision = false;
@@ -173,7 +174,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						throw new InterruptedException();
 					}
 
-					yesVotes = new ArrayList<String>();
+					yesVotes = new HashSet<Participant<R>>();
 					upSize = this.getUpList().size();
 					votesReceived = upSize - 1; // here votesReceived acts as
 												// "acksReceived"
@@ -186,7 +187,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 						mtype = message.getType();
 						if (mtype == MessageType.ACK) {
-							yesVotes.add(message.getSource());
+							yesVotes.add(findParticipant(message.getSource()));
 							votesReceived--;
 						} else if (mtype == MessageType.FAIL) {
 							handleFailedProcess(message.getSource());
@@ -210,7 +211,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						throw new InterruptedException();
 					}
 
-					this.broadcastMessage(Message.MessageType.COMMIT, request);
+					this.broadcastMessage(yesVotes, Message.MessageType.COMMIT, request);
 
 					if (thread.isInterrupted(C_FAIL_AFTER_COMMIT_AFTER_SEND)) {
 						throw new InterruptedException();
@@ -223,7 +224,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						throw new InterruptedException();
 					}
 
-					this.coordinatorAbort(request);
+					this.coordinatorAbort(yesVotes, request);
 
 					if (thread.isInterrupted(C_FAIL_AFTER_ABORT_AFTER_SEND)) {
 						throw new InterruptedException();
@@ -323,13 +324,18 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 				// cast our votes!
 				if (this.castVote(request).equals(Vote.YES)) {
+
+					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_REQ)) {
+						throw new InterruptedException();
+					}
+					
 					log.log(YES);
 					this.state = State.UNCERTAIN;
 
 					if (thread.isInterrupted(P_FAIL_AFTER_VOTE_BEFORE_SEND)) {
 						throw new InterruptedException();
 					}
-
+					
 					// send yes to coordinator
 					this.sendMessage(getCurrentCoordinator().getUid(),
 							MessageType.YES, request);
@@ -473,7 +479,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 		try {
 			// request state from all processes
-			// TODO: how do we have the request?
 			this.broadcastMessage(MessageType.STATE_REQ, request);
 
 			int upSize = this.getUpList().size();
@@ -483,6 +488,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 			boolean isCommitted = false;
 			boolean isUncertain = false;
 
+			Set<Participant<R>> uncertainParticipants = 
+				new HashSet<Participant<R>>();
+			
 			MessageType mtype = null;
 			while (stateReportsReceived != 0) {
 				try {
@@ -500,6 +508,8 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					stateReportsReceived--;
 				} else if (mtype == MessageType.UNCERTAIN) {
 					isUncertain = true;
+					uncertainParticipants.add(
+							findParticipant(message.getSource()));
 					stateReportsReceived--;
 				} else if (mtype == MessageType.COMMITTABLE) {
 					stateReportsReceived --;
@@ -513,7 +523,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				// TODO: may write ABORT twice
 				log.log(ABORT);
 
-				// TODO: where do we get the request from?
 				this.broadcastMessage(MessageType.ABORT, request);
 			}
 
@@ -522,7 +531,6 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				// TODO: may write COMMIT twice
 				log.log(COMMIT);
 
-				// TODO: where do we get the request from?
 				this.broadcastMessage(MessageType.COMMIT, request);					
 			}
 
@@ -531,21 +539,34 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				log.log(ABORT);
 				this.state = State.ABORTED;
 
-				// TODO: where do we get the request from?
 				this.broadcastMessage(MessageType.ABORT, request);										
 			}
 
 			// TR4
 			else {
 				// send precommits to all uncertain
-				// TODO:
+				this.broadcastMessage(uncertainParticipants, MessageType.PRE_COMMIT, request);
+				
 				// wait for acks
-				// TODO:
+				upSize = this.getUpList().size();
+				int acksReceived = upSize - 1;
+
+				while (acksReceived != 0) {
+					try {
+						message = receiveMessage(TIMEOUT);
+					} catch (MessageTimeoutException e) {
+						acksReceived--;
+					}
+
+					mtype = message.getType();
+					if (mtype == MessageType.ACK) {
+						acksReceived--;
+					}
+				}
 				
 				log.log(COMMIT);
 				this.state = State.COMMITTED;
 				
-				// TODO: where do we get the request from?
 				this.broadcastMessage(MessageType.COMMIT, request);				
 			}
 			
@@ -635,11 +656,11 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		
 	}
 
-	private void removeCoordinatorFromUpList(){
-		if(this.getCurrentCoordinator().getUid() != this.getUid())
-			this.getUpList().remove(this.getCurrentCoordinator());
+	protected void startRecoveryFromFailure() {
+		// TODO Auto-generated method stub
+		
 	}
-	
+
 	private void startElectionProtocol(R request) {
 		Participant<R> newCoordinator = this.getUpList().first();
 		this.setCurrentCoordinator(newCoordinator);
@@ -666,7 +687,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		this.getUpList().remove(failedParticipant);
 	}
 
-	private void coordinatorAbort(R request) {
+	private void coordinatorAbort(Set<Participant<R>> peeps, R request) {
 		this.getLog().log(ABORT);
 		this.state = State.ABORTED;
 		this.abort(request);
@@ -674,7 +695,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		this.sendMessage(this.getManagerAddress().getHostName(), this
 				.getManagerAddress(), Message.MessageType.ABORT, request);
 
-		this.broadcastMessage(Message.MessageType.ABORT, request);
+		this.broadcastMessage(peeps, Message.MessageType.ABORT, request);
 	}
 
 	private Participant<R> findParticipant(String uid) {
