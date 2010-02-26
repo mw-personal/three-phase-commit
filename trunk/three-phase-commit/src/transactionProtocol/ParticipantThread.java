@@ -13,8 +13,14 @@ public class ParticipantThread<R extends Request, P extends Participant<R>> exte
 	}
 
 	public boolean isInterrupted(String s) {
-		return (s == null) ? isInterrupted() : ((s.equals(this.pointToFail)) ? true : isInterrupted());
+		boolean toInterrupt = (s == null) ? isInterrupted() : ((s.equals(this.pointToFail)) ? true : isInterrupted());
+		if (toInterrupt) {
+			participant.setExecutionState(ExecutionState.FAILED);
+		}
+			
+		return toInterrupt;
 	}
+	
 	@Override
 	public void run() {
 		super.run();
