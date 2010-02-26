@@ -163,7 +163,7 @@ public abstract class Participant<R extends Request> {
 	public abstract Vote castVote(R r);
 	public abstract void commit(R r);
 	public abstract void startCommitProtocol();
-	protected abstract void startTerminationProtocol(R r);
+//	protected abstract void startTerminationProtocol(R r);
 	protected abstract void startRecoveryFromFailure();
 
 	//

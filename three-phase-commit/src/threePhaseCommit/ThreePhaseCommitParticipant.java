@@ -2,8 +2,11 @@ package threePhaseCommit;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import logger.Logger;
 import transactionProtocol.Message;
@@ -23,66 +26,37 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 	// Timeouts
 	public static int TIMEOUT = 1000;
-	public static final int INFINITE_TIMEOUT = 0;
+	private static final int INFINITE_TIMEOUT = 0;
 
 	// Log types
-	public static final String ABORT = "ABORT";
-	public static final String COMMIT = "COMMIT";
-	public static final String YES = "YES";
-	public static final String NO = "NO";
-	public static final String START = "START-3PC";
+	private static final String ABORT = "ABORT";
+	private static final String COMMIT = "COMMIT";
+	private static final String YES = "YES";
+	private static final String NO = "NO";
+	private static final String START = "START-3PC";
 
 	// Participant points to fail
-	public static final String P_FAIL_BEFORE_INIT = "Participant-Fail-Before-Init";
-	public static final String P_FAIL_BEFORE_VOTE_REQ = "Participant-Fail-Before-Vote-Req";
-	public static final String P_FAIL_AFTER_VOTE_REQ = "Participant-Fail-After-Vote-Req";
-	public static final String P_FAIL_AFTER_VOTE_BEFORE_SEND = "Participant-Fail-After-Vote-Before-Send";
-	public static final String P_FAIL_AFTER_VOTE_AFTER_SEND = "Participant-Fail-After-Vote-After-Send";
-	public static final String P_FAIL_BEFORE_ACK = "Participant-Fail-Before-Ack";
-	public static final String P_FAIL_AFTER_ACK = "Participant-Fail-After-Ack";
-	public static final String P_FAIL_AFTER_COMMIT = "Participant-Fail-After-Commit";
-	public static final String P_FAIL_AFTER_ABORT = "Participant-Fail-After-Abort";
-	
-	// Coordinator points to fail
-	public static final String C_FAIL_BEFORE_INIT = "Coordinator-Fail-Before-Init";
-	public static final String C_FAIL_BEFORE_VOTE_REQ = "Coordinator-Fail-Before-Vote-Req";
-	public static final String C_FAIL_AFTER_VOTE_REQ = "Coordinator-Fail-After-Vote-Req";
-	public static final String C_FAIL_BEFORE_PRE_COMMIT = "Coordinator-Fail-Before-Pre-Commit";
-	public static final String C_FAIL_AFTER_PRE_COMMIT = "Coordinator-Fail-After-Pre-Commit";
-	public static final String C_FAIL_AFTER_COMMIT_BEFORE_SEND = "Coordinator-Fail-After-Commit-Before-Send";
-	public static final String C_FAIL_AFTER_COMMIT_AFTER_SEND = "Coordinator-Fail-After-Commit-After-Send";
-	public static final String C_FAIL_AFTER_ABORT_BEFORE_SEND = "Coordinator-Fail-After-Abort-Before-Send";
-	public static final String C_FAIL_AFTER_ABORT_AFTER_SEND = "Coordinator-Fail-After-Abort-Before-Send";
+	private static final String P_FAIL_BEFORE_INIT = "Participant-Fail-Before-Init";
+	private static final String P_FAIL_BEFORE_VOTE_REQ = "Participant-Fail-Before-Vote-Req";
+	private static final String P_FAIL_AFTER_VOTE_REQ = "Participant-Fail-After-Vote-Req";
+	private static final String P_FAIL_AFTER_VOTE_BEFORE_SEND = "Participant-Fail-After-Vote-Before-Send";
+	private static final String P_FAIL_AFTER_VOTE_AFTER_SEND = "Participant-Fail-After-Vote-After-Send";
+	private static final String P_FAIL_BEFORE_ACK = "Participant-Fail-Before-Ack";
+	private static final String P_FAIL_AFTER_ACK = "Participant-Fail-After-Ack";
+	private static final String P_FAIL_AFTER_COMMIT = "Participant-Fail-After-Commit";
+	private static final String P_FAIL_AFTER_ABORT = "Participant-Fail-After-Abort";
 
-	public static final String[] PARTICIPANT_FAIL_POINTS;
-	public static final String[] COORDINATOR_FAIL_POINTS;
-	static {
-		PARTICIPANT_FAIL_POINTS = new String[] {
-				P_FAIL_BEFORE_INIT,
-				P_FAIL_BEFORE_VOTE_REQ,
-				P_FAIL_AFTER_VOTE_REQ,
-				P_FAIL_AFTER_VOTE_BEFORE_SEND,
-				P_FAIL_AFTER_VOTE_AFTER_SEND,
-				P_FAIL_BEFORE_ACK,
-				P_FAIL_AFTER_ACK,
-				P_FAIL_AFTER_COMMIT,
-				P_FAIL_AFTER_ABORT
-		};
-		
-		COORDINATOR_FAIL_POINTS = new String[] {
-				C_FAIL_BEFORE_INIT,
-				C_FAIL_BEFORE_VOTE_REQ,
-				C_FAIL_AFTER_VOTE_REQ,
-				C_FAIL_BEFORE_PRE_COMMIT,
-				C_FAIL_AFTER_PRE_COMMIT,
-				C_FAIL_AFTER_COMMIT_BEFORE_SEND,
-				C_FAIL_AFTER_COMMIT_AFTER_SEND,
-				C_FAIL_AFTER_ABORT_BEFORE_SEND,
-				C_FAIL_AFTER_ABORT_AFTER_SEND
-		};
-	}
-	
-	
+	// Coordinator points to fail
+	private static final String C_FAIL_BEFORE_INIT = "Coordinator-Fail-Before-Init";
+	private static final String C_FAIL_BEFORE_VOTE_REQ = "Coordinator-Fail-Before-Vote-Req";
+	private static final String C_FAIL_AFTER_VOTE_REQ = "Coordinator-Fail-After-Vote-Req";
+	private static final String C_FAIL_BEFORE_PRE_COMMIT = "Coordinator-Fail-Before-Pre-Commit";
+	private static final String C_FAIL_AFTER_PRE_COMMIT = "Coordinator-Fail-After-Pre-Commit";
+	private static final String C_FAIL_AFTER_COMMIT_BEFORE_SEND = "Coordinator-Fail-After-Commit-Before-Send";
+	private static final String C_FAIL_AFTER_COMMIT_AFTER_SEND = "Coordinator-Fail-After-Commit-After-Send";
+	private static final String C_FAIL_AFTER_ABORT_BEFORE_SEND = "Coordinator-Fail-After-Abort-Before-Send";
+	private static final String C_FAIL_AFTER_ABORT_AFTER_SEND = "Coordinator-Fail-After-Abort-Before-Send";
+
 	// Participant termination protocol points to fail
 	private static final String T_P_FAIL_BEFORE_STATE_REQ = "T-Participant-Fail-Before-State-Req";
 	private static final String T_P_FAIL_AFTER_SEND_STATE = "T-Participant-Fail-After-Send-State";
@@ -113,15 +87,15 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		}
 	}
 
-	@Override
-	protected void startTerminationProtocol(R request) {
-		if (isCoordinator()) {
-			startCoordinatorTerminationProtocol(request);
-		} else {
-			startParticipantTerminationProtocol(request);
-		}
-	}
-
+	
+//	protected void startTerminationProtocol(R request, Set<Participant<R>> resurrectedSet) {
+//		if (isCoordinator()) {
+//			startCoordinatorTerminationProtocol(request);
+//		} else {
+//			startParticipantTerminationProtocol(request, resurrectedSet);
+//		}
+//	}
+	
 	@SuppressWarnings("unchecked")
 	private void startCoordinatorCommitProtocol() {
 		Message<R> message = null;
@@ -131,10 +105,13 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		boolean decision;
 		Logger log = this.getLog();
 		R request = null;
+		Set<Participant<R>> resurrectedSet = new TreeSet<Participant<R>>();
+		
 
 		try {
 			intial_state: while (true) {
-				
+				handleResurrectedSet(resurrectedSet);
+				resurrectedSet = new TreeSet<Participant<R>>();
 				log.log("WAITING FOR INTIALIZE");
 
 				// wait for initialization
@@ -154,7 +131,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					this.handleFailedProcess(message.getSource());
 					continue intial_state;
 				} else if (mtype == MessageType.ALIVE) {
-					this.handleResurrectedProcess(message.getSource());
+					this.handleResurrectedProcess(message.getSource(), resurrectedSet);
 					continue intial_state;
 				} else {
 					continue intial_state;
@@ -195,7 +172,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					} else if (mtype == MessageType.FAIL) {
 						this.handleFailedProcess(message.getSource());
 					} else if (mtype == MessageType.ALIVE) {
-						this.handleResurrectedProcess(message.getSource());
+						this.handleResurrectedProcess(message.getSource(), resurrectedSet);
 					}
 				}
 
@@ -232,7 +209,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							votesReceived--; // we don't care about failed
 												// participants
 						} else if (mtype == MessageType.ALIVE) {
-							handleResurrectedProcess(message.getSource());
+							handleResurrectedProcess(message.getSource(), resurrectedSet);
 						}
 					}
 
@@ -281,7 +258,8 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		Message<R> message = null;
 		Logger log = getLog();
 		R request = null;
-
+		Set<Participant<R>> resurrectedSet = new TreeSet<Participant<R>>();
+		
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = 
 			((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
 
@@ -289,6 +267,8 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 			initial_state: while (true) {
 				
+				handleResurrectedSet(resurrectedSet);
+				resurrectedSet = new TreeSet<Participant<R>>();
 				log.log("WAITING FOR INTIALIZE");
 
 				if (thread.isInterrupted(P_FAIL_BEFORE_INIT)) {
@@ -317,7 +297,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 							mtype = message.getType();
 							if (mtype == MessageType.ALIVE) {
-								this.handleResurrectedProcess(message.getSource());
+								this.handleResurrectedProcess(message.getSource(), resurrectedSet);
 							} else if (mtype == MessageType.FAIL) {
 								this.handleFailedProcess(message.getSource());
 							} else if (mtype == MessageType.VOTE_REQ) {
@@ -326,7 +306,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 								// TODO: omg what to do here.
 								this.removeCoordinatorFromUpList();
 								this.setCurrentCoordinator(this);
-								this.startCoordinatorTerminationProtocol(request);
+								this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 								continue initial_state;
 							}
 						}
@@ -346,14 +326,14 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 					log.log(message.toString());
 					continue initial_state;
 				} else if (mtype == MessageType.ALIVE) {
-					this.handleResurrectedProcess(message.getSource());
+					this.handleResurrectedProcess(message.getSource(), resurrectedSet);
 					log.log(message.toString());
 					continue initial_state;
 				} else if (mtype == MessageType.UR_ELECTED) {
 					// TODO: omg what to do here?!
 					this.removeCoordinatorFromUpList();
 					this.setCurrentCoordinator(this);
-					this.startCoordinatorTerminationProtocol(request);
+					this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 					continue initial_state;
 				} else {
 					log.log(message.toString());
@@ -391,7 +371,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 							mtype = message.getType();
 							if (mtype == MessageType.ALIVE) {
 								this.handleResurrectedProcess(message
-										.getSource());
+										.getSource(), resurrectedSet);
 							} else if (mtype == MessageType.FAIL) {
 								this.handleFailedProcess(message.getSource());
 							} else if (mtype == MessageType.ABORT) {
@@ -403,7 +383,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 								// TODO: omg what to do here?!
 								this.removeCoordinatorFromUpList();
 								this.setCurrentCoordinator(this);
-								this.startCoordinatorTerminationProtocol(request);
+								this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 								continue initial_state;
 							} else if (mtype == MessageType.PRE_COMMIT) {
 								this.state = State.COMMITTABLE;
@@ -429,7 +409,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 										mtype = message.getType();
 										if (mtype == MessageType.ALIVE) {
-											this.handleResurrectedProcess(message.getSource());
+											this.handleResurrectedProcess(message.getSource(), resurrectedSet);
 										} else if (mtype == MessageType.FAIL) {
 											this.handleFailedProcess(message
 													.getSource());
@@ -448,7 +428,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 											// TODO: omg what to do here?!
 											this.removeCoordinatorFromUpList();
 											this.setCurrentCoordinator(this);
-											this.startCoordinatorTerminationProtocol(request);
+											this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 											continue initial_state;
 										}
 									}
@@ -456,9 +436,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 									this.removeCoordinatorFromUpList();
 									this.startElectionProtocol(request);
 									if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
-										this.startCoordinatorTerminationProtocol(request);
+										this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 									} else{
-										this.startParticipantTerminationProtocol(request);
+										this.startParticipantTerminationProtocol(request, resurrectedSet);
 									}
 									continue initial_state;
 								}
@@ -468,9 +448,9 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 						this.removeCoordinatorFromUpList();
 						this.startElectionProtocol(request);
 						if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
-							this.startCoordinatorTerminationProtocol(request);
+							this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 						} else{
-							this.startParticipantTerminationProtocol(request);
+							this.startParticipantTerminationProtocol(request, resurrectedSet);
 						}
 						continue initial_state;
 					}
@@ -511,133 +491,136 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		}
 	}
 
-	private void startCoordinatorTerminationProtocol(R request) {
+	private void startCoordinatorTerminationProtocol(R request, Set<Participant<R>> resurrectedSet) throws InterruptedException{
 		Message<R> message = null;
 		final Logger log = this.getLog();
 
 		ParticipantThread<R, ThreePhaseCommitParticipant<R>> thread = 
 			((ParticipantThread<R, ThreePhaseCommitParticipant<R>>) Thread.currentThread());
 		
-		try {
-			
-			if (thread.isInterrupted(T_C_FAIL_BEFORE_STATE_REQ)) {
-				throw new InterruptedException();
-			}
-			
-			// request state from all processes
-			this.broadcastMessage(MessageType.STATE_REQ, request);
-			
-			if(thread.isInterrupted(T_C_FAIL_AFTER_STATE_REQ)){
-				throw new InterruptedException();
-			}
-			
-			int upSize = this.getUpList().size();
-			int stateReportsReceived = upSize - 1;
-			
-			boolean isAborted = false;
-			boolean isCommitted = false;
-			boolean isCommittable = false;
+		if (thread.isInterrupted(T_C_FAIL_BEFORE_STATE_REQ)) {
+			throw new InterruptedException();
+		}
+		
+		// request state from all processes
+		this.broadcastMessage(MessageType.STATE_REQ, request);
+		
+		if(thread.isInterrupted(T_C_FAIL_AFTER_STATE_REQ)){
+			throw new InterruptedException();
+		}
+		
+		int upSize = this.getUpList().size();
+		int stateReportsReceived = upSize - 1;
+		
+		boolean isAborted = false;
+		boolean isCommitted = false;
+		boolean isCommittable = false;
 
-			Set<Participant<R>> uncertainParticipants = 
-				new HashSet<Participant<R>>();
+		Set<Participant<R>> uncertainParticipants = 
+			new HashSet<Participant<R>>();
+		
+		MessageType mtype = null;
+		while (stateReportsReceived != 0) {
+			try {
+				message = this.receiveMessage(TIMEOUT);
+			} catch (MessageTimeoutException e) { 
+				stateReportsReceived--;
+			}
+
+			mtype = message.getType();
+			if (mtype == MessageType.ABORTED) {
+				isAborted = true;
+				stateReportsReceived--;
+			} else if (mtype == MessageType.COMMITTED) {
+				isCommitted = true;
+				stateReportsReceived--;
+			} else if (mtype == MessageType.UNCERTAIN) {
+				uncertainParticipants.add(
+						findParticipant(message.getSource()));
+				stateReportsReceived--;
+			} else if (mtype == MessageType.COMMITTABLE) {
+				isCommittable = true;
+				stateReportsReceived --;
+			} else if(mtype == MessageType.FAIL){
+				this.handleFailedProcess(message.getSource());
+			} else if(mtype == MessageType.ALIVE){
+				this.handleResurrectedProcess(message.getSource(), resurrectedSet);
+			}
 			
-			MessageType mtype = null;
-			while (stateReportsReceived != 0) {
+			// TODO; handle other kinds of messages here
+		}
+					
+		// TR1
+		if (this.state == State.ABORTED || isAborted) {
+			// TODO: may write ABORT twice
+			log.log(ABORT);
+
+			this.broadcastMessage(MessageType.ABORT, request);
+		}
+
+		// TR2
+		else if (this.state == State.COMMITTED || isCommitted) {
+			// TODO: may write COMMIT twice
+			log.log(COMMIT);
+
+			this.broadcastMessage(MessageType.COMMIT, request);					
+		}
+
+		// TR3
+		else if (this.state == State.UNCERTAIN && !isCommittable) {
+			log.log(ABORT);
+			this.state = State.ABORTED;
+
+			this.broadcastMessage(MessageType.ABORT, request);										
+		}
+
+		// TR4
+		else {
+			// send precommits to all uncertain
+			this.broadcastMessage(uncertainParticipants, MessageType.PRE_COMMIT, request);
+			
+			if(thread.isInterrupted(T_C_FAIL_AFTER_PRE_COMMIT)){
+				throw new InterruptedException();
+			}
+			
+			// wait for acks
+			upSize = this.getUpList().size();
+			int acksReceived = upSize - 1;
+
+			while (acksReceived != 0) {
 				try {
-					message = this.receiveMessage(TIMEOUT);
-				} catch (MessageTimeoutException e) { 
-					stateReportsReceived--;
+					message = receiveMessage(TIMEOUT);
+				} catch (MessageTimeoutException e) {
+					acksReceived--;
 				}
 
 				mtype = message.getType();
-				if (mtype == MessageType.ABORTED) {
-					isAborted = true;
-					stateReportsReceived--;
-				} else if (mtype == MessageType.COMMITTED) {
-					isCommitted = true;
-					stateReportsReceived--;
-				} else if (mtype == MessageType.UNCERTAIN) {
-					uncertainParticipants.add(
-							findParticipant(message.getSource()));
-					stateReportsReceived--;
-				} else if (mtype == MessageType.COMMITTABLE) {
-					isCommittable = true;
-					stateReportsReceived --;
+				if (mtype == MessageType.ACK) {
+					acksReceived--;
+				} else if(mtype == MessageType.ALIVE){
+					this.handleResurrectedProcess(message.getSource(), resurrectedSet);
+				} else if(mtype == MessageType.FAIL){
+					this.handleFailedProcess(message.getSource());
 				}
-				
-				// TODO; handle other kinds of messages here
-			}
-						
-			// TR1
-			if (this.state == State.ABORTED || isAborted) {
-				// TODO: may write ABORT twice
-				log.log(ABORT);
-
-				this.broadcastMessage(MessageType.ABORT, request);
-			}
-
-			// TR2
-			else if (this.state == State.COMMITTED || isCommitted) {
-				// TODO: may write COMMIT twice
-				log.log(COMMIT);
-
-				this.broadcastMessage(MessageType.COMMIT, request);					
-			}
-
-			// TR3
-			else if (this.state == State.UNCERTAIN && !isCommittable) {
-				log.log(ABORT);
-				this.state = State.ABORTED;
-
-				this.broadcastMessage(MessageType.ABORT, request);										
-			}
-
-			// TR4
-			else {
-				// send precommits to all uncertain
-				this.broadcastMessage(uncertainParticipants, MessageType.PRE_COMMIT, request);
-				
-				if(thread.isInterrupted(T_C_FAIL_AFTER_PRE_COMMIT)){
-					throw new InterruptedException();
-				}
-				
-				// wait for acks
-				upSize = this.getUpList().size();
-				int acksReceived = upSize - 1;
-
-				while (acksReceived != 0) {
-					try {
-						message = receiveMessage(TIMEOUT);
-					} catch (MessageTimeoutException e) {
-						acksReceived--;
-					}
-
-					mtype = message.getType();
-					if (mtype == MessageType.ACK) {
-						acksReceived--;
-					}
-				}
-				
-				log.log(COMMIT);
-				this.state = State.COMMITTED;
-				
-				this.broadcastMessage(MessageType.COMMIT, request);				
 			}
 			
-			// notify the TM of our action
-			this.sendMessage(this.getManagerAddress().getHostName(),
-					this.getManagerAddress(),
-					(this.state == State.COMMITTED) ? 
-							MessageType.COMMIT : MessageType.ABORT, 
-					request);
+			log.log(COMMIT);
+			this.state = State.COMMITTED;
+			
+			this.broadcastMessage(MessageType.COMMIT, request);				
 		}
 		
-		catch (Exception e) {
-
-		}
+		// notify the TM of our action
+		this.sendMessage(this.getManagerAddress().getHostName(),
+				this.getManagerAddress(),
+				(this.state == State.COMMITTED) ? 
+						MessageType.COMMIT : MessageType.ABORT, 
+				request);
+		
+		
 	}
 
-	private void startParticipantTerminationProtocol(R request) {
+	private void startParticipantTerminationProtocol(R request, Set<Participant<R>> resurrectedSet) throws InterruptedException {
 		Message<R> message = null;
 		MessageType mType = null;
 		MessageType stateType = null;
@@ -649,136 +632,131 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		/**
 		 * Wait for STATE-REQ
 		 */
-		try{
-			if (thread.isInterrupted(T_P_FAIL_BEFORE_STATE_REQ)) {
-				throw new InterruptedException();
-			}
-			// Spin until receiving State_Request from coordinator
-			while(!processed){
-				try{
-					message = this.receiveMessage(TIMEOUT);
-				} catch(MessageTimeoutException e){
-					this.removeCoordinatorFromUpList();
-					this.startElectionProtocol(request);
-					if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
-						this.startCoordinatorTerminationProtocol(request);
-					} else{
-						this.startParticipantTerminationProtocol(request);
-					}
-					return;
-				}
-				mType = message.getType();
-				if(mType.equals(MessageType.STATE_REQ)){
-					switch(this.state){
-						case ABORTED: 		stateType = MessageType.ABORTED;
-											break;
-						case COMMITTABLE:	stateType = MessageType.COMMITTABLE;
-											break;
-						case COMMITTED:		stateType = MessageType.COMMITTED;
-											break;
-						case UNCERTAIN:		stateType = MessageType.UNCERTAIN;
-					}
-					this.sendMessage(this.getCurrentCoordinator().getUid(), stateType, request);
-					processed = true;
-				} else if (mType == MessageType.FAIL) {
-					this.handleFailedProcess(message.getSource());
-				} else if(mType == MessageType.UR_ELECTED){
-					this.removeCoordinatorFromUpList();
-					this.setCurrentCoordinator(this);
-					this.startCoordinatorTerminationProtocol(request);
-					return;
-				} else if (mType == MessageType.ALIVE){
-					this.handleResurrectedProcess(message.getSource());
+		if (thread.isInterrupted(T_P_FAIL_BEFORE_STATE_REQ)) {
+			throw new InterruptedException();
+		}
+		// Spin until receiving State_Request from coordinator
+		while(!processed){
+			try{
+				message = this.receiveMessage(TIMEOUT);
+			} catch(MessageTimeoutException e){
+				this.removeCoordinatorFromUpList();
+				this.startElectionProtocol(request);
+				if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+					this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 				} else{
-					// TODO:  Any other cases to handle?
+					this.startParticipantTerminationProtocol(request, resurrectedSet);
 				}
+				return;
 			}
-			
-			if (thread.isInterrupted(T_P_FAIL_AFTER_SEND_STATE)) {
-				throw new InterruptedException();
-			}
-			
-			/**
-			 * Wait for response from coordinator
-			 */
-			processed = false;
-			while(!processed){
-				try{
-					message = this.receiveMessage(TIMEOUT);
-				} catch(MessageTimeoutException e){
-					this.removeCoordinatorFromUpList();
-					this.startElectionProtocol(request);
-					if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
-						this.startCoordinatorTerminationProtocol(request);
-					} else{
-						this.startParticipantTerminationProtocol(request);
-					}
-					return;
+			mType = message.getType();
+			if(mType.equals(MessageType.STATE_REQ)){
+				switch(this.state){
+					case ABORTED: 		stateType = MessageType.ABORTED;
+										break;
+					case COMMITTABLE:	stateType = MessageType.COMMITTABLE;
+										break;
+					case COMMITTED:		stateType = MessageType.COMMITTED;
+										break;
+					case UNCERTAIN:		stateType = MessageType.UNCERTAIN;
 				}
-				mType = message.getType();
-				if(mType == MessageType.ABORT){
-					this.getLog().log(ABORT);
-					return;
-				} else if(mType == MessageType.COMMIT){
-					this.getLog().log(COMMIT);
-					return;
-				} else if(mType == MessageType.FAIL){
-					this.handleFailedProcess(message.getSource());
-				} else if(mType == MessageType.ALIVE){
-					this.handleResurrectedProcess(message.getSource());
-				} else if(mType == MessageType.UR_ELECTED){
-					this.removeCoordinatorFromUpList();
-					this.setCurrentCoordinator(this);
-					this.startCoordinatorTerminationProtocol(request);
-					return;
-				} else if(mType == MessageType.PRE_COMMIT){
-					this.sendMessage(this.getCurrentCoordinator().getUid(), MessageType.ACK, request);
-					processed = true;
+				this.sendMessage(this.getCurrentCoordinator().getUid(), stateType, request);
+				processed = true;
+			} else if (mType == MessageType.FAIL) {
+				this.handleFailedProcess(message.getSource());
+			} else if(mType == MessageType.UR_ELECTED){
+				this.removeCoordinatorFromUpList();
+				this.setCurrentCoordinator(this);
+				this.startCoordinatorTerminationProtocol(request, resurrectedSet);
+				return;
+			} else if (mType == MessageType.ALIVE){
+				this.handleResurrectedProcess(message.getSource(), resurrectedSet);
+			} else{
+				// TODO:  Any other cases to handle?
+			}
+		}
+		
+		if (thread.isInterrupted(T_P_FAIL_AFTER_SEND_STATE)) {
+			throw new InterruptedException();
+		}
+		
+		/**
+		 * Wait for response from coordinator
+		 */
+		processed = false;
+		while(!processed){
+			try{
+				message = this.receiveMessage(TIMEOUT);
+			} catch(MessageTimeoutException e){
+				this.removeCoordinatorFromUpList();
+				this.startElectionProtocol(request);
+				if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+					this.startCoordinatorTerminationProtocol(request, resurrectedSet);
 				} else{
-					// TODO:  Any other cases to handle?
+					this.startParticipantTerminationProtocol(request, resurrectedSet);
 				}
+				return;
+			}
+			mType = message.getType();
+			if(mType == MessageType.ABORT){
+				this.getLog().log(ABORT);
+				return;
+			} else if(mType == MessageType.COMMIT){
+				this.getLog().log(COMMIT);
+				return;
+			} else if(mType == MessageType.FAIL){
+				this.handleFailedProcess(message.getSource());
+			} else if(mType == MessageType.ALIVE){
+				this.handleResurrectedProcess(message.getSource(), resurrectedSet);
+			} else if(mType == MessageType.UR_ELECTED){
+				this.removeCoordinatorFromUpList();
+				this.setCurrentCoordinator(this);
+				this.startCoordinatorTerminationProtocol(request, resurrectedSet);
+				return;
+			} else if(mType == MessageType.PRE_COMMIT){
+				this.sendMessage(this.getCurrentCoordinator().getUid(), MessageType.ACK, request);
+				processed = true;
+			} else{
+				// TODO:  Any other cases to handle?
+			}
+		}
+		
+		if(thread.isInterrupted(T_P_FAIL_AFTER_ACK)){
+			throw new InterruptedException();
+		}
+		
+		/** 
+		 * Pre-Commit
+		 */
+		processed = false;
+		while(!processed){
+			try{
+				message = this.receiveMessage(TIMEOUT);
+			} catch(MessageTimeoutException e){
+				this.removeCoordinatorFromUpList();
+				this.startElectionProtocol(request);
+				if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
+					this.startCoordinatorTerminationProtocol(request, resurrectedSet);
+				} else{
+					this.startParticipantTerminationProtocol(request, resurrectedSet);
+				}
+				return;
 			}
 			
-			if(thread.isInterrupted(T_P_FAIL_AFTER_ACK)){
-				throw new InterruptedException();
+			mType = message.getType();
+			if(mType == MessageType.COMMIT){
+				this.getLog().log(COMMIT);
+				processed = true;
+			} else if(mType == MessageType.FAIL){
+				this.handleFailedProcess(message.getSource());
+			} else if(mType == MessageType.ALIVE){
+				this.handleResurrectedProcess(message.getSource(), resurrectedSet);
+			} else if(mType == MessageType.UR_ELECTED){
+				this.removeCoordinatorFromUpList();
+				this.setCurrentCoordinator(this);
+				this.startCoordinatorTerminationProtocol(request, resurrectedSet);
+				return;
 			}
-			
-			/** 
-			 * Pre-Commit
-			 */
-			processed = false;
-			while(!processed){
-				try{
-					message = this.receiveMessage(TIMEOUT);
-				} catch(MessageTimeoutException e){
-					this.removeCoordinatorFromUpList();
-					this.startElectionProtocol(request);
-					if(this.getCurrentCoordinator().getUid().equals(this.getUid())){
-						this.startCoordinatorTerminationProtocol(request);
-					} else{
-						this.startParticipantTerminationProtocol(request);
-					}
-					return;
-				}
-				
-				mType = message.getType();
-				if(mType == MessageType.COMMIT){
-					this.getLog().log(COMMIT);
-					processed = true;
-				} else if(mType == MessageType.FAIL){
-					this.handleFailedProcess(message.getSource());
-				} else if(mType == MessageType.ALIVE){
-					this.handleResurrectedProcess(message.getSource());
-				} else if(mType == MessageType.UR_ELECTED){
-					this.removeCoordinatorFromUpList();
-					this.setCurrentCoordinator(this);
-					this.startCoordinatorTerminationProtocol(request);
-					return;
-				}
-			}
-			
-		} catch(InterruptedException e){
-			
 		}
 		
 		
@@ -802,13 +780,13 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 				MessageType.UR_ELECTED, request);
 	}
 
-	private void handleResurrectedProcess(String uid) {
+	private void handleResurrectedProcess(String uid, Set<Participant<R>> resurrectedSet) {
 		Participant<R> resurrectedParticipant = findParticipant(uid);
 		if (resurrectedParticipant == null) {
 			throw new IllegalStateException();
 		}
-
-		// TODO: what to do here?!
+		
+		resurrectedSet.add(resurrectedParticipant);
 	}
 
 	private void handleFailedProcess(String uid) {
@@ -820,6 +798,12 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 		this.getUpList().remove(failedParticipant);
 	}
 
+	public void handleResurrectedSet(Set<Participant<R>> set){
+		for(Participant<R> p : set){
+			this.getUpList().add(p);
+		}
+	}
+	
 	private void coordinatorAbort(Set<Participant<R>> peeps, R request) {
 		this.getLog().log(ABORT);
 		this.state = State.ABORTED;
@@ -830,7 +814,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 
 		this.broadcastMessage(peeps, Message.MessageType.ABORT, request);
 	}
-
+	
 	private Participant<R> findParticipant(String uid) {
 		Participant<R> par = null;
 		for (Participant<R> p : this.getParticipants()) {
