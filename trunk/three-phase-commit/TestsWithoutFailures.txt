@@ -22,7 +22,7 @@
         "inbox-ip": "128.62.178.219",
         "inbox-port": 9002,
         "log-file": "logs/mylogfile2.txt",
-        "point-to-fail": "",
+        "point-to-fail": "Participant-Fail-After-Vote-Before-Send",
         "ranking": 2,
         "uid": "e35ab01a-e9be-4c96-a8a9-96780de35874"
     },
