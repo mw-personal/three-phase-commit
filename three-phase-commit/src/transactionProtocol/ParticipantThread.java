@@ -21,6 +21,18 @@ public class ParticipantThread<R extends Request, P extends Participant<R>> exte
 		return toInterrupt;
 	}
 	
+	public void setPointToFail(String s) {
+		this.pointToFail = s;
+	}
+	
+	public String getPointToFail() {
+		return this.pointToFail;
+	}
+	
+	public P getParticipant() {
+		return participant;
+	}
+	
 	@Override
 	public void run() {
 		super.run();

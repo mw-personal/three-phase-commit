@@ -18,7 +18,7 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 	private boolean started;
 	private Map<String, String> pointsToFail;
 	private Map<String, P> participantMap;
-	private Map<String, Thread> participantThreads;
+	private Map<String, ParticipantThread<R, P>> participantThreads;
 	private Set<String> failedParticipants;
 	
 	public ParticipantThreadPool(Class<P> type, String configFile) throws IOException, JSONException {
@@ -31,7 +31,7 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		Set<P> peeps = pc.getParticipants();
 		this.pointsToFail = pc.getPointsToFail();
 		this.participantMap = new HashMap<String, P>();
-		this.participantThreads = new HashMap<String, Thread>();
+		this.participantThreads = new HashMap<String, ParticipantThread<R, P>>();
 		this.failedParticipants = new HashSet<String>();
 
 		
@@ -97,6 +97,10 @@ public class ParticipantThreadPool<R extends Request, P extends Participant<R>> 
 		
 	public Set<P> getParticipants(){
 		return new HashSet<P>(this.participantMap.values());
+	}
+	
+	public Map<String, ParticipantThread<R, P>> getParticipantThreads() {
+		return this.participantThreads;
 	}
 	
 	public void stop() {

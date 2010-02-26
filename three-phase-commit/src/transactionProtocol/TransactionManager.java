@@ -42,6 +42,12 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		this.inbox = new ServerSocket(address.getPort());
 		this.address = address;
 	}
+	
+	public TransactionManager(Class<P> type, ParticipantThreadPool<R, P> threadpool, InetSocketAddress address) throws IOException {
+		this.launcher = threadpool;
+		this.inbox = new ServerSocket(address.getPort());
+		this.address = address;
+	}
 		
 	@Override
 	protected void finalize() throws Throwable {
