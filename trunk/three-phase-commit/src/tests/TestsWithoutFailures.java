@@ -160,7 +160,7 @@ public class TestsWithoutFailures {
 	
 	
 	private boolean sendRequestToManager(BankingRequestType type, String accountName, double amount) {
-		return transMan.sendRequest(new BankingRequest(type, accountName, amount));
+		return transMan.sendRequest(new BankingRequest(testCount, type, accountName, amount));
 	}
 	
 	private String usedAccountName() {
