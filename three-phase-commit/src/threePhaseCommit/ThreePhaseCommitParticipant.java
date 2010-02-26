@@ -2,9 +2,7 @@ package threePhaseCommit;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -25,7 +23,7 @@ public abstract class ThreePhaseCommitParticipant<R extends Request> extends Par
 	};
 
 	// Timeouts
-	public static int TIMEOUT = 0;
+	public static int TIMEOUT = 1000;
 	private static final int INFINITE_TIMEOUT = 0;
 
 	// Log types
