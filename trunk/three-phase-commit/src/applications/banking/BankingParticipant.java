@@ -80,5 +80,18 @@ public class BankingParticipant extends ThreePhaseCommitParticipant<BankingReque
 		String s = super.toString();
 		return s + "BANKING!";
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		} else if (obj instanceof BankingParticipant) {
+			BankingParticipant bp = (BankingParticipant) obj;
+			return this.accounts.equals(bp.accounts);
+		}
+		
+		return false;
+	}
+
 	
 }

@@ -56,6 +56,10 @@ public class TransactionManager<R extends Request, P extends Participant<R>>{
 		super.finalize();
 	}
 
+	public boolean assertEqualState() {
+		return this.launcher.assertEqualState();
+	}
+	
 	public void initParticipants() {
 		SortedSet<P> sortedParticipants = new TreeSet<P>(new ParticipantComparator<R, P>());
 		sortedParticipants.addAll(launcher.getParticipants());
