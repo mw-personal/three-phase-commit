@@ -21,7 +21,9 @@ import logger.TransactionLogger;
 import transactionProtocol.Message.MessageType;
 
 public abstract class Participant<R extends Request> {
-
+	
+	public enum ExecutionState { READY, STARTED, FAILED, RECOVERING }
+	
 	// general information regarding a process
 	private String uid;
 	private Logger logger;
@@ -30,6 +32,7 @@ public abstract class Participant<R extends Request> {
 	private String defaultVote; 
 	private SortedSet<Participant<R>> upList;
 	private Map<String, Participant<R>> participants;
+	private ExecutionState executionState;
 	
 	// sockets for message passing
 	private InetSocketAddress address;
@@ -113,6 +116,14 @@ public abstract class Participant<R extends Request> {
 	
 	public Logger getLog() {
 		return this.logger;
+	}
+	
+	protected ExecutionState getExecutionState() {
+		return this.executionState;
+	}
+	
+	protected void setExecutionState(ExecutionState es) {
+		this.executionState = es;
 	}
 	
 	public String getDefaultVote() {
