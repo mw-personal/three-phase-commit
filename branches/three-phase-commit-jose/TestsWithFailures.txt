@@ -1,0 +1,38 @@
+{"participants": [
+    {
+        "default-vote": "?",
+        "inbox-ip": "192.168.2.48",
+        "inbox-port": 9090,
+        "log-file": "logs/mylogfile0.txt",
+        "point-to-fail": "",
+        "ranking": 0,
+        "uid": "bb403c7a-3ca4-483f-8a30-88c321978da2"
+    },
+    {
+        "default-vote": "?",
+        "inbox-ip": "192.168.2.48",
+        "inbox-port": 9091,
+        "log-file": "logs/mylogfile1.txt",
+        "point-to-fail": "",
+        "ranking": 1,
+        "uid": "030f0d7d-6323-4966-a181-b31b23a3462f"
+    },
+    {
+        "default-vote": "?",
+        "inbox-ip": "192.168.2.48",
+        "inbox-port": 9092,
+        "log-file": "logs/mylogfile2.txt",
+        "point-to-fail": "",
+        "ranking": 2,
+        "uid": "74a44023-aa29-4eb0-8eaa-745b0cfd566a"
+    },
+    {
+        "default-vote": "?",
+        "inbox-ip": "192.168.2.48",
+        "inbox-port": 9093,
+        "log-file": "logs/mylogfile3.txt",
+        "point-to-fail": "",
+        "ranking": 3,
+        "uid": "19299900-6fad-4821-8e43-25b0950d637b"
+    }
+]}
